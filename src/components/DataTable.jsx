@@ -56,6 +56,8 @@ export default function DataTable({
   showRank = false,
   maxHeight,
   unit,
+  headerBg = 'bg-slate-50',
+  headerText = 'text-slate-500',
 }) {
   const [sort, setSort] = useState(defaultSort || null)
   const [page, setPage] = useState(0)
@@ -106,7 +108,7 @@ export default function DataTable({
       <thead>
         <tr className="border-b border-slate-200">
           {showRank && (
-            <th className={`${sticky} bg-slate-50 px-4 py-3 text-left text-xs font-semibold text-slate-400`}>#</th>
+            <th className={`${sticky} ${headerBg} px-4 py-3 text-left text-xs font-semibold ${headerText}`}>#</th>
           )}
           {visibleColumns.map((col) => {
             const active = sort && sort.key === col.key
@@ -114,9 +116,9 @@ export default function DataTable({
               <th
                 key={col.key}
                 onClick={() => toggleSort(col)}
-                className={`${sticky} whitespace-nowrap bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500 ${
+                className={`${sticky} whitespace-nowrap ${headerBg} px-4 py-3 text-xs font-semibold ${headerText} ${
                   alignClass[col.align] || alignClass.left
-                } ${col.sortable === false ? '' : 'cursor-pointer select-none hover:text-slate-700'}`}
+                } ${col.sortable === false ? '' : 'cursor-pointer select-none hover:text-slate-900'}`}
               >
                 <span className={`inline-flex items-center ${col.align === 'right' ? 'justify-end' : ''}`}>
                   {col.label}

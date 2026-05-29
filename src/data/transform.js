@@ -16,18 +16,27 @@ export function deriveRooftopType(teamType, subType) {
   return 'Others'
 }
 
+// The source occasionally ships ids with or without the `lt.` prefix.
+const teamIdOf = (r) => norm(r['lt.team_id'] ?? r['team_id'])
+const enterpriseIdOf = (r) => norm(r['lt.enterprise_id'] ?? r['enterprise_id'])
+
 export function transformRows(rawRows) {
   return rawRows
-    .filter((r) => norm(r['lt.team_id']) !== '')
+    .filter((r) => teamIdOf(r) !== '')
     .map((r) => {
       const teamType = norm(r.team_type)
       const subType = norm(r.team_sub_type)
       const liveRaw = norm(r.live_date)
       const parsed = liveRaw ? new Date(liveRaw) : null
       const liveDate = parsed && !isNaN(parsed.getTime()) ? parsed : null
+      // Bucket/display by the UTC calendar date (matches the source & the sheet),
+      // not the viewer's local timezone — otherwise late-UTC timestamps drift months.
+      const liveYMD = liveDate
+        ? `${liveDate.getUTCFullYear()}-${String(liveDate.getUTCMonth() + 1).padStart(2, '0')}-${String(liveDate.getUTCDate()).padStart(2, '0')}`
+        : null
       return {
-        teamId: norm(r['lt.team_id']),
-        enterpriseId: norm(r['lt.enterprise_id']),
+        teamId: teamIdOf(r),
+        enterpriseId: enterpriseIdOf(r),
         teamName: norm(r.team_name) || '—',
         enterpriseName: norm(r.enterprise_name) || '—',
         stage: norm(r.stage) || '—',
@@ -41,9 +50,8 @@ export function transformRows(rawRows) {
         smartview: isYes(r.Smartview_vdp_enabled ?? r.Smartview_vdp ?? r.smartview_vdp),
         app: isYes(r.app_adoption),
         liveDate,
-        liveMonth: liveDate
-          ? `${liveDate.getFullYear()}-${String(liveDate.getMonth() + 1).padStart(2, '0')}`
-          : null,
+        liveYMD,
+        liveMonth: liveYMD ? liveYMD.slice(0, 7) : null,
       }
     })
 }

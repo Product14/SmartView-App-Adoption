@@ -92,6 +92,8 @@ export default function EnterpriseView({ rows }) {
         maxHeight="500px"
         showRank
         unit="enterprises"
+        headerBg="bg-slate-200"
+        headerText="text-slate-800"
         csvFilename="enterprise-view.csv"
         rowKey={(e) => e.enterpriseId}
       />

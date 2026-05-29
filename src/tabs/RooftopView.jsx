@@ -3,7 +3,7 @@ import DataTable from '../components/DataTable'
 import FilterBar from '../components/FilterBar'
 import Pill from '../components/Pill'
 import CopyButton from '../components/CopyButton'
-import { fmtMoney, dateLabel, toInputDate } from '../utils/format'
+import { fmtMoney, ymdLabel } from '../utils/format'
 
 const SUBTYPE_COLOR = {
   FRANCHISE_DEALER: 'indigo',
@@ -95,7 +95,7 @@ export default function RooftopView({ rows }) {
     { key: 'smartview', label: 'SmartView VDP', align: 'center', sortValue: (r) => (r.smartview ? 1 : 0), render: (r) => <Pill color={r.smartview ? 'green' : 'slate'}>{r.smartview ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartview ? 'Yes' : 'No') },
     { key: 'app', label: 'App Adoption', align: 'center', sortValue: (r) => (r.app ? 1 : 0), render: (r) => <Pill color={r.app ? 'green' : 'slate'}>{r.app ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.app ? 'Yes' : 'No') },
     { key: 'arr', label: 'Contracted ARR', align: 'right', sortValue: (r) => r.arr, render: (r) => <span className="font-semibold text-slate-900">{fmtMoney(r.arr)}</span>, csvValue: (r) => Math.round(r.arr) },
-    { key: 'liveDate', label: 'Live Date', sortValue: (r) => (r.liveDate ? r.liveDate.getTime() : 0), render: (r) => <span className="text-slate-600">{dateLabel(r.liveDate)}</span>, csvValue: (r) => (r.liveDate ? toInputDate(r.liveDate) : '') },
+    { key: 'liveDate', label: 'Live Date', sortValue: (r) => r.liveYMD || '', render: (r) => <span className="text-slate-600">{ymdLabel(r.liveYMD)}</span>, csvValue: (r) => r.liveYMD || '' },
   ]
 
   const hasFilters = search || stage || type || csm || obPoc || sv || app
@@ -131,6 +131,8 @@ export default function RooftopView({ rows }) {
         maxHeight="500px"
         showRank
         unit="rooftops"
+        headerBg="bg-slate-200"
+        headerText="text-slate-800"
         csvFilename="rooftop-view.csv"
         rowKey={(r) => r.teamId}
       />

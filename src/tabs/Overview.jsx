@@ -75,10 +75,9 @@ export default function Overview({ rows }) {
   const [period, setPeriod] = useState('month')
 
   const periodRows = useMemo(() => {
-    const fromD = from ? new Date(from + 'T00:00:00') : null
-    const toD = to ? new Date(to + 'T23:59:59') : null
+    // from/to and liveYMD are all YYYY-MM-DD, so string compare = UTC-date compare.
     const filtered = rows.filter(
-      (r) => r.liveDate && (!fromD || r.liveDate >= fromD) && (!toD || r.liveDate <= toD),
+      (r) => r.liveYMD && (!from || r.liveYMD >= from) && (!to || r.liveYMD <= to),
     )
     return byPeriod(filtered, period)
   }, [rows, from, to, period])

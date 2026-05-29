@@ -25,11 +25,17 @@ export function monthLabel(ym) {
   return `${MONTHS[Number(m) - 1]} ${y}`
 }
 
+// "2026-05-12" -> "12 May 2026"
+export function ymdLabel(ymd) {
+  if (!ymd) return '—'
+  const [y, m, d] = ymd.split('-').map(Number)
+  return `${d} ${MONTHS[m - 1]} ${y}`
+}
+
 // "2026-05-12" (week-start Monday) -> "Week of 12 May 2026"
 export function weekLabel(ymd) {
   if (!ymd) return '—'
-  const [y, m, d] = ymd.split('-').map(Number)
-  return `Week of ${dateLabel(new Date(y, m - 1, d))}`
+  return `Week of ${ymdLabel(ymd)}`
 }
 
 // Date -> "30 May 2025"

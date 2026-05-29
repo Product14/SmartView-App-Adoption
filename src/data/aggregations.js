@@ -66,20 +66,20 @@ export function byCSM(rows) {
 }
 
 const pad2 = (n) => String(n).padStart(2, '0')
-const monthKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`
 
-// Key for the Monday that starts the date's week (YYYY-MM-DD, sortable).
-function weekKey(d) {
-  const day = d.getDay() // 0=Sun … 6=Sat
-  const diff = day === 0 ? -6 : 1 - day
-  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() + diff)
-  return `${monday.getFullYear()}-${pad2(monday.getMonth() + 1)}-${pad2(monday.getDate())}`
+// Key for the Monday (UTC) that starts the week containing the given YYYY-MM-DD.
+function weekKey(ymd) {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  const day = dt.getUTCDay() // 0=Sun … 6=Sat
+  dt.setUTCDate(dt.getUTCDate() + (day === 0 ? -6 : 1 - day))
+  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`
 }
 
-// Group go-lives by 'month' or 'week'; newest period first.
+// Group go-lives by 'month' or 'week' on the UTC calendar date; newest period first.
 export function byPeriod(rows, period) {
-  const keyFn = period === 'week' ? (r) => weekKey(r.liveDate) : (r) => monthKey(r.liveDate)
-  const out = [...groupBy(rows.filter((r) => r.liveDate), keyFn).entries()].map(([k, rs]) =>
+  const keyFn = period === 'week' ? (r) => weekKey(r.liveYMD) : (r) => r.liveYMD.slice(0, 7)
+  const out = [...groupBy(rows.filter((r) => r.liveYMD), keyFn).entries()].map(([k, rs]) =>
     rollup(k, rs),
   )
   out.sort((a, b) => b.key.localeCompare(a.key))
