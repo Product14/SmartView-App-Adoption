@@ -1,0 +1,188 @@
+import { useMemo, useState } from 'react'
+import KpiCard from '../components/KpiCard'
+import DataTable from '../components/DataTable'
+import { byCSM, byPeriod, byRooftopType, computeKpis } from '../data/aggregations'
+import { fmtInt, monthLabel, pct, pctOf, toInputDate, weekLabel } from '../utils/format'
+
+// Shared column set for the By Rooftop Type / By CSM rollup tables.
+const groupColumns = (firstLabel) => [
+  {
+    key: 'key',
+    label: firstLabel,
+    render: (r) => <span className="font-semibold text-slate-800">{r.key}</span>,
+    totalRender: () => <span className="font-bold">Total</span>,
+    csvValue: (r) => r.key,
+  },
+  {
+    key: 'rooftops',
+    label: '# Rooftops',
+    align: 'right',
+    render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>,
+    totalRender: (t) => fmtInt(t.rooftops),
+    csvValue: (r) => r.rooftops,
+  },
+  {
+    key: 'enterprises',
+    label: '# Enterprises',
+    align: 'right',
+    render: (r) => <span className="text-slate-600">{fmtInt(r.enterprises)}</span>,
+    totalRender: (t) => fmtInt(t.enterprises),
+    csvValue: (r) => r.enterprises,
+  },
+  {
+    key: 'svPct',
+    label: 'SmartView - VDP %',
+    align: 'right',
+    sortValue: (r) => r.svPct,
+    render: (r) => <span className="font-semibold text-emerald-600">{pctOf(r.svPct)}</span>,
+    totalRender: (t) => pctOf(t.svPct),
+    csvValue: (r) => pctOf(r.svPct),
+  },
+  {
+    key: 'appPct',
+    label: 'Studio App Adoption %',
+    align: 'right',
+    sortValue: (r) => r.appPct,
+    render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>,
+    totalRender: (t) => pctOf(t.appPct),
+    csvValue: (r) => pctOf(r.appPct),
+  },
+]
+
+export default function Overview({ rows }) {
+  const kpis = useMemo(() => computeKpis(rows), [rows])
+  const typeRows = useMemo(() => byRooftopType(rows), [rows])
+  const csmRows = useMemo(() => byCSM(rows), [rows])
+
+  const totalEnterprises = useMemo(() => new Set(rows.map((r) => r.enterpriseId)).size, [rows])
+  const totalRow = {
+    rooftops: kpis.total,
+    enterprises: totalEnterprises,
+    svPct: kpis.total ? kpis.sv / kpis.total : 0,
+    appPct: kpis.total ? kpis.app / kpis.total : 0,
+  }
+
+  // Newly Onboarded date range (default: previous 3 months).
+  const defaults = useMemo(() => {
+    const now = new Date()
+    return {
+      from: toInputDate(new Date(now.getFullYear(), now.getMonth() - 3, 1)),
+      to: toInputDate(now),
+    }
+  }, [])
+  const [from, setFrom] = useState(defaults.from)
+  const [to, setTo] = useState(defaults.to)
+  const [period, setPeriod] = useState('month')
+
+  const periodRows = useMemo(() => {
+    const fromD = from ? new Date(from + 'T00:00:00') : null
+    const toD = to ? new Date(to + 'T23:59:59') : null
+    const filtered = rows.filter(
+      (r) => r.liveDate && (!fromD || r.liveDate >= fromD) && (!toD || r.liveDate <= toD),
+    )
+    return byPeriod(filtered, period)
+  }, [rows, from, to, period])
+
+  const periodLabel = (key) => (period === 'week' ? weekLabel(key) : monthLabel(key))
+
+  const periodColumns = [
+    { key: 'key', label: period === 'week' ? 'Week' : 'Month', sortValue: (r) => r.key, render: (r) => <span className="font-semibold text-slate-800">{periodLabel(r.key)}</span>, csvValue: (r) => periodLabel(r.key) },
+    { key: 'rooftops', label: '# Rooftops', align: 'right', render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>, csvValue: (r) => r.rooftops },
+    { key: 'enterprises', label: '# Enterprises', align: 'right', render: (r) => <span className="text-slate-600">{fmtInt(r.enterprises)}</span>, csvValue: (r) => r.enterprises },
+    { key: 'svPct', label: 'SmartView - VDP %', align: 'right', sortValue: (r) => r.svPct, render: (r) => <span className="font-semibold text-emerald-600">{pctOf(r.svPct)}</span>, csvValue: (r) => pctOf(r.svPct) },
+    { key: 'appPct', label: 'Studio App Adoption %', align: 'right', sortValue: (r) => r.appPct, render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>, csvValue: (r) => pctOf(r.appPct) },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* KPIs */}
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <KpiCard label="Total Rooftops" value={fmtInt(kpis.total)} accent="indigo" />
+        <KpiCard
+          label="SmartView Adopted"
+          value={fmtInt(kpis.sv)}
+          sub={`${pct(kpis.sv, kpis.total)} of rooftops`}
+          accent="green"
+        />
+        <KpiCard
+          label="App Adopted"
+          value={fmtInt(kpis.app)}
+          sub={`${pct(kpis.app, kpis.total)} of rooftops`}
+          accent="blue"
+        />
+      </div>
+
+      {/* By Rooftop Type */}
+      <DataTable
+        title="By Rooftop Type"
+        columns={groupColumns('Rooftop Type')}
+        rows={typeRows}
+        showRank
+        pageSize={null}
+        totalRow={totalRow}
+        csvFilename="by-rooftop-type.csv"
+        rowKey={(r) => r.key}
+      />
+
+      {/* By CSM (scrollable, sticky header + total) */}
+      <DataTable
+        title="By CSM"
+        columns={groupColumns('CSM')}
+        rows={csmRows}
+        showRank
+        defaultSort={{ key: 'rooftops', dir: 'desc' }}
+        pageSize={null}
+        maxHeight="460px"
+        totalRow={totalRow}
+        csvFilename="by-csm.csv"
+        rowKey={(r) => r.key}
+      />
+
+      {/* Newly Onboarded Clients */}
+      <DataTable
+        title="Newly Onboarded Clients"
+        columns={periodColumns}
+        rows={periodRows}
+        pageSize={null}
+        maxHeight="460px"
+        csvFilename="newly-onboarded.csv"
+        rowKey={(r) => r.key}
+        emptyText="No rooftops went live in this range"
+        headerExtra={
+          <div className="flex items-center gap-3 text-sm text-slate-500">
+            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 font-medium">
+              {['Month', 'Week'].map((opt) => {
+                const val = opt.toLowerCase()
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setPeriod(val)}
+                    className={`rounded-md px-3 py-1 transition ${
+                      period === val ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+            <span>Live date</span>
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-indigo-400 focus:outline-none"
+            />
+            <span>→</span>
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+        }
+      />
+    </div>
+  )
+}
