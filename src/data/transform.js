@@ -46,6 +46,7 @@ export function transformRows(rawRows) {
         teamType,
         subType,
         rooftopType: deriveRooftopType(teamType, subType),
+        customerSegment: norm(r.customer_segment) || 'Unspecified',
         // Support either the current header (Smartview_vdp_enabled) or a rename.
         smartview: isYes(r.Smartview_vdp_enabled ?? r.Smartview_vdp ?? r.smartview_vdp),
         app: isYes(r.app_adoption),

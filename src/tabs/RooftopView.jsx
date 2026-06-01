@@ -30,11 +30,13 @@ export default function RooftopView({ rows }) {
   const [type, setType] = useState('')
   const [csm, setCsm] = useState('')
   const [obPoc, setObPoc] = useState('')
+  const [segment, setSegment] = useState('')
   const [sv, setSv] = useState('')
   const [app, setApp] = useState('')
 
   const stageOptions = useMemo(() => distinct(rows.map((r) => r.stage)).map((v) => ({ value: v, label: v })), [rows])
   const typeOptions = useMemo(() => distinct(rows.map(typeOf)).map((v) => ({ value: v, label: v })), [rows])
+  const segmentOptions = useMemo(() => distinct(rows.map((r) => r.customerSegment)).map((v) => ({ value: v, label: v })), [rows])
   const csmOptions = useMemo(() => distinct(rows.map((r) => r.csm)).map((v) => ({ value: v, label: v })), [rows])
   const obOptions = useMemo(() => distinct(rows.map((r) => r.obPoc)).map((v) => ({ value: v, label: v })), [rows])
   const yesNo = [
@@ -49,6 +51,7 @@ export default function RooftopView({ rows }) {
       if (type && typeOf(r) !== type) return false
       if (csm && r.csm !== csm) return false
       if (obPoc && r.obPoc !== obPoc) return false
+      if (segment && r.customerSegment !== segment) return false
       if (sv && (sv === 'Yes') !== r.smartview) return false
       if (app && (app === 'Yes') !== r.app) return false
       if (
@@ -61,7 +64,7 @@ export default function RooftopView({ rows }) {
         return false
       return true
     })
-  }, [rows, search, stage, type, csm, obPoc, sv, app])
+  }, [rows, search, stage, type, csm, obPoc, segment, sv, app])
 
   const columns = [
     {
@@ -90,6 +93,7 @@ export default function RooftopView({ rows }) {
     { key: 'enterpriseId', label: 'Enterprise ID', hidden: true, csvValue: (r) => r.enterpriseId },
     { key: 'stage', label: 'Stage', render: (r) => <Pill color={stageColor(r.stage)}>{r.stage}</Pill> },
     { key: 'subType', label: 'Type', sortValue: typeOf, render: (r) => <Pill color={SUBTYPE_COLOR[typeOf(r)]}>{typeOf(r)}</Pill>, csvValue: typeOf },
+    { key: 'customerSegment', label: 'Customer Segment', render: (r) => <span className="text-slate-600">{r.customerSegment}</span>, csvValue: (r) => r.customerSegment },
     { key: 'csm', label: 'CSM', render: (r) => <span className="text-slate-600">{r.csm}</span> },
     { key: 'obPoc', label: 'OB POC', render: (r) => <span className="text-slate-600">{r.obPoc}</span> },
     { key: 'smartview', label: 'SmartView VDP', align: 'center', sortValue: (r) => (r.smartview ? 1 : 0), render: (r) => <Pill color={r.smartview ? 'green' : 'slate'}>{r.smartview ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartview ? 'Yes' : 'No') },
@@ -98,7 +102,7 @@ export default function RooftopView({ rows }) {
     { key: 'liveDate', label: 'Live Date', sortValue: (r) => r.liveYMD || '', render: (r) => <span className="text-slate-600">{ymdLabel(r.liveYMD)}</span>, csvValue: (r) => r.liveYMD || '' },
   ]
 
-  const hasFilters = search || stage || type || csm || obPoc || sv || app
+  const hasFilters = search || stage || type || csm || obPoc || segment || sv || app
 
   return (
     <div className="space-y-4">
@@ -109,6 +113,7 @@ export default function RooftopView({ rows }) {
           { label: 'All Types', value: type, onChange: setType, options: typeOptions },
           { label: 'All CSMs', value: csm, onChange: setCsm, options: csmOptions },
           { label: 'All OB POCs', value: obPoc, onChange: setObPoc, options: obOptions },
+          { label: 'All Segments', value: segment, onChange: setSegment, options: segmentOptions },
           { label: 'SmartView: All', value: sv, onChange: setSv, options: yesNo },
           { label: 'App: All', value: app, onChange: setApp, options: yesNo },
         ]}
@@ -119,6 +124,7 @@ export default function RooftopView({ rows }) {
           setType('')
           setCsm('')
           setObPoc('')
+          setSegment('')
           setSv('')
           setApp('')
         }}

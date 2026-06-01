@@ -59,6 +59,19 @@ export function byRooftopType(rows) {
   return out
 }
 
+// Display order for the customer-segment buckets.
+export const SEGMENT_ORDER = ['Ent', 'SMB', 'Resellers', 'Unspecified']
+
+export function byCustomerSegment(rows) {
+  const out = [...groupBy(rows, (r) => r.customerSegment).entries()].map(([k, rs]) => rollup(k, rs))
+  out.sort((a, b) => {
+    const ai = SEGMENT_ORDER.indexOf(a.key)
+    const bi = SEGMENT_ORDER.indexOf(b.key)
+    return (ai === -1 ? SEGMENT_ORDER.length : ai) - (bi === -1 ? SEGMENT_ORDER.length : bi)
+  })
+  return out
+}
+
 export function byCSM(rows) {
   const out = [...groupBy(rows, (r) => r.csm).entries()].map(([k, rs]) => rollup(k, rs))
   out.sort((a, b) => b.rooftops - a.rooftops)
@@ -95,6 +108,7 @@ export function byEnterprise(rows) {
     let arr = 0
     const csmCount = {}
     const typeCount = {}
+    const segmentCount = {}
     for (const r of rs) {
       if (r.smartview) sv++
       if (r.app) app++
@@ -105,14 +119,19 @@ export function byEnterprise(rows) {
       csmCount[r.csm] = (csmCount[r.csm] || 0) + 1
       const tt = r.teamType || 'NA'
       typeCount[tt] = (typeCount[tt] || 0) + 1
+      const seg = r.customerSegment || 'Unspecified'
+      segmentCount[seg] = (segmentCount[seg] || 0) + 1
     }
     const csm = Object.entries(csmCount).sort((a, b) => b[1] - a[1])[0][0]
     // An enterprise's team_type is normally uniform; if mixed, take the most common.
     const teamType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0][0]
+    // Same for customer_segment — uniform per enterprise; take the most common if mixed.
+    const customerSegment = Object.entries(segmentCount).sort((a, b) => b[1] - a[1])[0][0]
     return {
       enterpriseId: id,
       enterpriseName: rs[0].enterpriseName,
       teamType,
+      customerSegment,
       rooftops: rs.length,
       live,
       onboarding,

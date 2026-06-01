@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
-import { byCSM, byPeriod, byRooftopType, computeKpis } from '../data/aggregations'
+import { byCSM, byCustomerSegment, byPeriod, byRooftopType, computeKpis } from '../data/aggregations'
 import { fmtInt, monthLabel, pct, pctOf, toInputDate, weekLabel } from '../utils/format'
 
 // Shared column set for the By Rooftop Type / By CSM rollup tables.
@@ -52,6 +52,7 @@ const groupColumns = (firstLabel) => [
 export default function Overview({ rows }) {
   const kpis = useMemo(() => computeKpis(rows), [rows])
   const typeRows = useMemo(() => byRooftopType(rows), [rows])
+  const segmentRows = useMemo(() => byCustomerSegment(rows), [rows])
   const csmRows = useMemo(() => byCSM(rows), [rows])
 
   const totalEnterprises = useMemo(() => new Set(rows.map((r) => r.enterpriseId)).size, [rows])
@@ -110,6 +111,18 @@ export default function Overview({ rows }) {
           accent="blue"
         />
       </div>
+
+      {/* By Customer Segment */}
+      <DataTable
+        title="By Customer Segment"
+        columns={groupColumns('Customer Segment')}
+        rows={segmentRows}
+        showRank
+        pageSize={null}
+        totalRow={totalRow}
+        csvFilename="by-customer-segment.csv"
+        rowKey={(r) => r.key}
+      />
 
       {/* By Rooftop Type */}
       <DataTable
