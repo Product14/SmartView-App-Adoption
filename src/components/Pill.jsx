@@ -5,6 +5,10 @@ const COLORS = {
   indigo: 'bg-indigo-50 text-indigo-700 ring-indigo-600/20',
   amber: 'bg-amber-50 text-amber-700 ring-amber-600/20',
   slate: 'bg-slate-100 text-slate-600 ring-slate-500/20',
+  violet: 'bg-violet-50 text-violet-700 ring-violet-600/20',
+  rose: 'bg-rose-50 text-rose-700 ring-rose-600/20',
+  teal: 'bg-teal-50 text-teal-700 ring-teal-600/20',
+  cyan: 'bg-cyan-50 text-cyan-700 ring-cyan-600/20',
 }
 
 export default function Pill({ children, color = 'slate' }) {

@@ -4,9 +4,9 @@ export default function Header({ recordCount, lastSynced, loading, onRefresh }) 
   return (
     <div className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">SmartView &amp; App Adoption</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Studio Adoption</h1>
         <p className="mt-1 text-sm text-slate-500">
-          SmartView (VDP) &amp; Studio App adoption across rooftops, enterprises and CSMs
+          SmartView (VDP &amp; VLP), Studio App &amp; Smart Campaign adoption across rooftops, enterprises and CSMs
         </p>
       </div>
       <div className="flex items-center gap-4">

@@ -1,7 +1,7 @@
-# SmartView & App Adoption
+# SmartView, App & Smart Campaign Adoption
 
-A self-serve dashboard tracking SmartView (VDP) and Studio App adoption across rooftops,
-enterprises and CSMs. Built to be opened by anyone via a URL without re-querying ClickHouse —
+A self-serve dashboard tracking SmartView (VDP & VLP), Studio App and Smart Campaign adoption across
+rooftops, enterprises and CSMs. Built to be opened by anyone via a URL without re-querying ClickHouse —
 it reads an hourly-refreshed Google Sheet and computes every rollup in the browser.
 
 ## How it works
@@ -17,8 +17,9 @@ it reads an hourly-refreshed Google Sheet and computes every rollup in the brows
 
 ## Tabs
 
-- **Overview** — Total Rooftops / SmartView Adopted / App Adopted KPIs, By Rooftop Type, By CSM,
-  and Newly Onboarded Clients (by live-date month, with a date-range filter).
+- **Overview** — Total Rooftops / SmartView Adoption / App Adoption / Smart Campaign Adoption /
+  SmartView VLP Adoption KPIs, By Rooftop Type, By CSM, and Newly Onboarded Clients (by live-date
+  month, with a date-range filter).
 - **Enterprise View** — one row per enterprise, with search + Account Type + CSM filters.
 - **Rooftop View** — one row per rooftop (lowest level), with the full filter set.
 

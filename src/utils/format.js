@@ -1,3 +1,15 @@
+// "FRANCHISE_DEALER" -> "FRANCHISE DEALER" (display only; keep the raw value for filtering/colors)
+export function noUnderscore(s) {
+  return (s ?? '').replace(/_/g, ' ')
+}
+
+// "aman.seth@spyne.ai" -> "aman.seth"; non-emails (e.g. "Unassigned") pass through unchanged.
+export function shortEmail(s) {
+  const v = s ?? ''
+  const at = v.indexOf('@')
+  return at === -1 ? v : v.slice(0, at)
+}
+
 export function fmtInt(n) {
   return (n ?? 0).toLocaleString('en-US')
 }

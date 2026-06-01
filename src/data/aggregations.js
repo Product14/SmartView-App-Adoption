@@ -22,11 +22,15 @@ function rollup(key, rows) {
   const enterprises = new Set()
   let sv = 0
   let app = 0
+  let sc = 0
+  let svl = 0
   let arr = 0
   for (const r of rows) {
     enterprises.add(r.enterpriseId)
     if (r.smartview) sv++
     if (r.app) app++
+    if (r.smartCampaign) sc++
+    if (r.smartviewVlp) svl++
     arr += r.arr
   }
   return {
@@ -35,22 +39,30 @@ function rollup(key, rows) {
     enterprises: enterprises.size,
     sv,
     app,
+    sc,
+    svl,
     arr,
     svPct: rows.length ? sv / rows.length : 0,
     appPct: rows.length ? app / rows.length : 0,
+    scPct: rows.length ? sc / rows.length : 0,
+    svlPct: rows.length ? svl / rows.length : 0,
   }
 }
 
 export function computeKpis(rows) {
   let sv = 0
   let app = 0
+  let sc = 0
+  let svl = 0
   let arr = 0
   for (const r of rows) {
     if (r.smartview) sv++
     if (r.app) app++
+    if (r.smartCampaign) sc++
+    if (r.smartviewVlp) svl++
     arr += r.arr
   }
-  return { total: rows.length, sv, app, arr }
+  return { total: rows.length, sv, app, sc, svl, arr }
 }
 
 export function byRooftopType(rows) {
@@ -103,26 +115,34 @@ export function byEnterprise(rows) {
   return [...groupBy(rows, (r) => r.enterpriseId).entries()].map(([id, rs]) => {
     let sv = 0
     let app = 0
+    let sc = 0
+    let svl = 0
     let live = 0
     let onboarding = 0
     let arr = 0
     const csmCount = {}
+    const obCount = {}
     const typeCount = {}
     const segmentCount = {}
     for (const r of rs) {
       if (r.smartview) sv++
       if (r.app) app++
+      if (r.smartCampaign) sc++
+      if (r.smartviewVlp) svl++
       const stage = r.stage.toLowerCase()
       if (stage === 'live') live++
       else if (stage === 'onboarding') onboarding++
       arr += r.arr
       csmCount[r.csm] = (csmCount[r.csm] || 0) + 1
+      obCount[r.obPoc] = (obCount[r.obPoc] || 0) + 1
       const tt = r.teamType || 'NA'
       typeCount[tt] = (typeCount[tt] || 0) + 1
       const seg = r.customerSegment || 'Unspecified'
       segmentCount[seg] = (segmentCount[seg] || 0) + 1
     }
     const csm = Object.entries(csmCount).sort((a, b) => b[1] - a[1])[0][0]
+    // OB POC is per-rooftop; surface the most common one for the enterprise.
+    const obPoc = Object.entries(obCount).sort((a, b) => b[1] - a[1])[0][0]
     // An enterprise's team_type is normally uniform; if mixed, take the most common.
     const teamType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0][0]
     // Same for customer_segment — uniform per enterprise; take the most common if mixed.
@@ -137,9 +157,14 @@ export function byEnterprise(rows) {
       onboarding,
       sv,
       app,
+      sc,
+      svl,
       svPct: rs.length ? sv / rs.length : 0,
       appPct: rs.length ? app / rs.length : 0,
+      scPct: rs.length ? sc / rs.length : 0,
+      svlPct: rs.length ? svl / rs.length : 0,
       csm,
+      obPoc,
       arr,
     }
   })

@@ -4,6 +4,7 @@ const ACCENTS = {
   green: 'text-emerald-600',
   red: 'text-red-500',
   amber: 'text-amber-500',
+  violet: 'text-violet-600',
 }
 
 export default function KpiCard({ label, value, sub, accent = 'indigo' }) {

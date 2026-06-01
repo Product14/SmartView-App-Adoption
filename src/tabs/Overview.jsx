@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react'
 import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
 import { byCSM, byCustomerSegment, byPeriod, byRooftopType, computeKpis } from '../data/aggregations'
-import { fmtInt, monthLabel, pct, pctOf, toInputDate, weekLabel } from '../utils/format'
+import { fmtInt, monthLabel, pct, pctOf, shortEmail, toInputDate, weekLabel } from '../utils/format'
 
 // Shared column set for the By Rooftop Type / By CSM rollup tables.
 const groupColumns = (firstLabel) => [
   {
     key: 'key',
     label: firstLabel,
-    render: (r) => <span className="font-semibold text-slate-800">{r.key}</span>,
+    render: (r) => <span className="font-semibold text-slate-800">{shortEmail(r.key)}</span>,
     totalRender: () => <span className="font-bold">Total</span>,
     csvValue: (r) => r.key,
   },
@@ -40,12 +40,30 @@ const groupColumns = (firstLabel) => [
   },
   {
     key: 'appPct',
-    label: 'Studio App Adoption %',
+    label: 'App %',
     align: 'right',
     sortValue: (r) => r.appPct,
     render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>,
     totalRender: (t) => pctOf(t.appPct),
     csvValue: (r) => pctOf(r.appPct),
+  },
+  {
+    key: 'scPct',
+    label: 'Smart Campaign %',
+    align: 'right',
+    sortValue: (r) => r.scPct,
+    render: (r) => <span className="font-semibold text-violet-600">{pctOf(r.scPct)}</span>,
+    totalRender: (t) => pctOf(t.scPct),
+    csvValue: (r) => pctOf(r.scPct),
+  },
+  {
+    key: 'svlPct',
+    label: 'SmartView VLP %',
+    align: 'right',
+    sortValue: (r) => r.svlPct,
+    render: (r) => <span className="font-semibold text-amber-600">{pctOf(r.svlPct)}</span>,
+    totalRender: (t) => pctOf(t.svlPct),
+    csvValue: (r) => pctOf(r.svlPct),
   },
 ]
 
@@ -61,6 +79,8 @@ export default function Overview({ rows }) {
     enterprises: totalEnterprises,
     svPct: kpis.total ? kpis.sv / kpis.total : 0,
     appPct: kpis.total ? kpis.app / kpis.total : 0,
+    scPct: kpis.total ? kpis.sc / kpis.total : 0,
+    svlPct: kpis.total ? kpis.svl / kpis.total : 0,
   }
 
   // Newly Onboarded date range (default: previous 3 months).
@@ -90,25 +110,39 @@ export default function Overview({ rows }) {
     { key: 'rooftops', label: '# Rooftops', align: 'right', render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>, csvValue: (r) => r.rooftops },
     { key: 'enterprises', label: '# Enterprises', align: 'right', render: (r) => <span className="text-slate-600">{fmtInt(r.enterprises)}</span>, csvValue: (r) => r.enterprises },
     { key: 'svPct', label: 'SmartView - VDP %', align: 'right', sortValue: (r) => r.svPct, render: (r) => <span className="font-semibold text-emerald-600">{pctOf(r.svPct)}</span>, csvValue: (r) => pctOf(r.svPct) },
-    { key: 'appPct', label: 'Studio App Adoption %', align: 'right', sortValue: (r) => r.appPct, render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>, csvValue: (r) => pctOf(r.appPct) },
+    { key: 'appPct', label: 'App %', align: 'right', sortValue: (r) => r.appPct, render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>, csvValue: (r) => pctOf(r.appPct) },
+    { key: 'scPct', label: 'Smart Campaign %', align: 'right', sortValue: (r) => r.scPct, render: (r) => <span className="font-semibold text-violet-600">{pctOf(r.scPct)}</span>, csvValue: (r) => pctOf(r.scPct) },
+    { key: 'svlPct', label: 'SmartView VLP %', align: 'right', sortValue: (r) => r.svlPct, render: (r) => <span className="font-semibold text-amber-600">{pctOf(r.svlPct)}</span>, csvValue: (r) => pctOf(r.svlPct) },
   ]
 
   return (
     <div className="space-y-6">
       {/* KPIs */}
       <div className="flex flex-col gap-4 sm:flex-row">
-        <KpiCard label="Total Rooftops" value={fmtInt(kpis.total)} accent="indigo" />
+        <KpiCard label="Total Rooftops" value={fmtInt(kpis.total)} sub="Live & OB" accent="indigo" />
         <KpiCard
-          label="SmartView Adopted"
+          label="SmartView Adoption"
           value={fmtInt(kpis.sv)}
-          sub={`${pct(kpis.sv, kpis.total)} of rooftops`}
+          sub={`${pct(kpis.sv, kpis.total)} of total`}
           accent="green"
         />
         <KpiCard
-          label="App Adopted"
+          label="App Adoption"
           value={fmtInt(kpis.app)}
-          sub={`${pct(kpis.app, kpis.total)} of rooftops`}
+          sub={`${pct(kpis.app, kpis.total)} of total`}
           accent="blue"
+        />
+        <KpiCard
+          label="Smart Campaign Adoption"
+          value={fmtInt(kpis.sc)}
+          sub={`${pct(kpis.sc, kpis.total)} of total`}
+          accent="violet"
+        />
+        <KpiCard
+          label="SmartView VLP Adoption"
+          value={fmtInt(kpis.svl)}
+          sub={`${pct(kpis.svl, kpis.total)} of total`}
+          accent="amber"
         />
       </div>
 
@@ -155,6 +189,7 @@ export default function Overview({ rows }) {
         title="Newly Onboarded Clients"
         columns={periodColumns}
         rows={periodRows}
+        showRank
         pageSize={null}
         maxHeight="460px"
         csvFilename="newly-onboarded.csv"

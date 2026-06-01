@@ -3,15 +3,29 @@ import DataTable from '../components/DataTable'
 import FilterBar from '../components/FilterBar'
 import Pill from '../components/Pill'
 import CopyButton from '../components/CopyButton'
-import { fmtMoney, ymdLabel } from '../utils/format'
+import { fmtMoney, noUnderscore, shortEmail, ymdLabel } from '../utils/format'
 
+// team_sub_type values, plus team_type values used as a fallback when sub_type is blank.
 const SUBTYPE_COLOR = {
   FRANCHISE_DEALER: 'indigo',
   INDEPENDENT_DEALER: 'blue',
+  GROUP_DEALER: 'indigo',
+  INDIVIDUAL_DEALER: 'blue',
+  PARTNER: 'amber',
+  MARKETPLACE: 'green',
   NA: 'slate',
 }
 
-const typeOf = (r) => r.subType || 'NA'
+// Distinct palette so segment pills don't visually collide with the Stage/Type columns.
+const SEGMENT_COLOR = {
+  Ent: 'violet',
+  Mid: 'amber',
+  SMB: 'cyan',
+  Resellers: 'teal',
+}
+
+// Prefer team_sub_type; fall back to team_type (account type) when sub_type is blank.
+const typeOf = (r) => r.subType || r.teamType || 'NA'
 
 function stageColor(stage) {
   const s = stage.toLowerCase()
@@ -33,12 +47,14 @@ export default function RooftopView({ rows }) {
   const [segment, setSegment] = useState('')
   const [sv, setSv] = useState('')
   const [app, setApp] = useState('')
+  const [sc, setSc] = useState('')
+  const [svl, setSvl] = useState('')
 
   const stageOptions = useMemo(() => distinct(rows.map((r) => r.stage)).map((v) => ({ value: v, label: v })), [rows])
-  const typeOptions = useMemo(() => distinct(rows.map(typeOf)).map((v) => ({ value: v, label: v })), [rows])
+  const typeOptions = useMemo(() => distinct(rows.map(typeOf)).map((v) => ({ value: v, label: noUnderscore(v) })), [rows])
   const segmentOptions = useMemo(() => distinct(rows.map((r) => r.customerSegment)).map((v) => ({ value: v, label: v })), [rows])
-  const csmOptions = useMemo(() => distinct(rows.map((r) => r.csm)).map((v) => ({ value: v, label: v })), [rows])
-  const obOptions = useMemo(() => distinct(rows.map((r) => r.obPoc)).map((v) => ({ value: v, label: v })), [rows])
+  const csmOptions = useMemo(() => distinct(rows.map((r) => r.csm)).map((v) => ({ value: v, label: shortEmail(v) })), [rows])
+  const obOptions = useMemo(() => distinct(rows.map((r) => r.obPoc)).map((v) => ({ value: v, label: shortEmail(v) })), [rows])
   const yesNo = [
     { value: 'Yes', label: 'Yes' },
     { value: 'No', label: 'No' },
@@ -54,6 +70,8 @@ export default function RooftopView({ rows }) {
       if (segment && r.customerSegment !== segment) return false
       if (sv && (sv === 'Yes') !== r.smartview) return false
       if (app && (app === 'Yes') !== r.app) return false
+      if (sc && (sc === 'Yes') !== r.smartCampaign) return false
+      if (svl && (svl === 'Yes') !== r.smartviewVlp) return false
       if (
         q &&
         !r.teamName.toLowerCase().includes(q) &&
@@ -64,7 +82,7 @@ export default function RooftopView({ rows }) {
         return false
       return true
     })
-  }, [rows, search, stage, type, csm, obPoc, segment, sv, app])
+  }, [rows, search, stage, type, csm, obPoc, segment, sv, app, sc, svl])
 
   const columns = [
     {
@@ -92,17 +110,19 @@ export default function RooftopView({ rows }) {
     { key: 'teamId', label: 'Team ID', hidden: true, csvValue: (r) => r.teamId },
     { key: 'enterpriseId', label: 'Enterprise ID', hidden: true, csvValue: (r) => r.enterpriseId },
     { key: 'stage', label: 'Stage', render: (r) => <Pill color={stageColor(r.stage)}>{r.stage}</Pill> },
-    { key: 'subType', label: 'Type', sortValue: typeOf, render: (r) => <Pill color={SUBTYPE_COLOR[typeOf(r)]}>{typeOf(r)}</Pill>, csvValue: typeOf },
-    { key: 'customerSegment', label: 'Customer Segment', render: (r) => <span className="text-slate-600">{r.customerSegment}</span>, csvValue: (r) => r.customerSegment },
-    { key: 'csm', label: 'CSM', render: (r) => <span className="text-slate-600">{r.csm}</span> },
-    { key: 'obPoc', label: 'OB POC', render: (r) => <span className="text-slate-600">{r.obPoc}</span> },
+    { key: 'subType', label: 'Type', sortValue: typeOf, render: (r) => <Pill color={SUBTYPE_COLOR[typeOf(r)]}>{noUnderscore(typeOf(r))}</Pill>, csvValue: typeOf },
+    { key: 'customerSegment', label: 'Customer Segment', render: (r) => <Pill color={SEGMENT_COLOR[r.customerSegment]}>{r.customerSegment}</Pill>, csvValue: (r) => r.customerSegment },
+    { key: 'csm', label: 'CSM', sortValue: (r) => r.csm, render: (r) => <span className="text-slate-600">{shortEmail(r.csm)}</span>, csvValue: (r) => r.csm },
+    { key: 'obPoc', label: 'OB POC', sortValue: (r) => r.obPoc, render: (r) => <span className="text-slate-600">{shortEmail(r.obPoc)}</span>, csvValue: (r) => r.obPoc },
     { key: 'smartview', label: 'SmartView VDP', align: 'center', sortValue: (r) => (r.smartview ? 1 : 0), render: (r) => <Pill color={r.smartview ? 'green' : 'slate'}>{r.smartview ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartview ? 'Yes' : 'No') },
     { key: 'app', label: 'App Adoption', align: 'center', sortValue: (r) => (r.app ? 1 : 0), render: (r) => <Pill color={r.app ? 'green' : 'slate'}>{r.app ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.app ? 'Yes' : 'No') },
+    { key: 'smartCampaign', label: 'Smart Campaign', align: 'center', sortValue: (r) => (r.smartCampaign ? 1 : 0), render: (r) => <Pill color={r.smartCampaign ? 'green' : 'slate'}>{r.smartCampaign ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartCampaign ? 'Yes' : 'No') },
+    { key: 'smartviewVlp', label: 'SmartView VLP', align: 'center', sortValue: (r) => (r.smartviewVlp ? 1 : 0), render: (r) => <Pill color={r.smartviewVlp ? 'green' : 'slate'}>{r.smartviewVlp ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartviewVlp ? 'Yes' : 'No') },
     { key: 'arr', label: 'Contracted ARR', align: 'right', sortValue: (r) => r.arr, render: (r) => <span className="font-semibold text-slate-900">{fmtMoney(r.arr)}</span>, csvValue: (r) => Math.round(r.arr) },
     { key: 'liveDate', label: 'Live Date', sortValue: (r) => r.liveYMD || '', render: (r) => <span className="text-slate-600">{ymdLabel(r.liveYMD)}</span>, csvValue: (r) => r.liveYMD || '' },
   ]
 
-  const hasFilters = search || stage || type || csm || obPoc || segment || sv || app
+  const hasFilters = search || stage || type || csm || obPoc || segment || sv || app || sc || svl
 
   return (
     <div className="space-y-4">
@@ -116,6 +136,8 @@ export default function RooftopView({ rows }) {
           { label: 'All Segments', value: segment, onChange: setSegment, options: segmentOptions },
           { label: 'SmartView: All', value: sv, onChange: setSv, options: yesNo },
           { label: 'App: All', value: app, onChange: setApp, options: yesNo },
+          { label: 'Smart Campaign: All', value: sc, onChange: setSc, options: yesNo },
+          { label: 'SmartView VLP: All', value: svl, onChange: setSvl, options: yesNo },
         ]}
         showClear={hasFilters}
         onClear={() => {
@@ -127,6 +149,8 @@ export default function RooftopView({ rows }) {
           setSegment('')
           setSv('')
           setApp('')
+          setSc('')
+          setSvl('')
         }}
       />
       <DataTable
