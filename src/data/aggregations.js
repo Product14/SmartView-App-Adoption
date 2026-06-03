@@ -20,49 +20,49 @@ export function groupBy(rows, keyFn) {
 // Shared rollup used by By Type / By CSM / By Month.
 function rollup(key, rows) {
   const enterprises = new Set()
-  let sv = 0
   let app = 0
-  let sc = 0
+  let sv = 0
   let svl = 0
+  let sc = 0
   let arr = 0
   for (const r of rows) {
     enterprises.add(r.enterpriseId)
-    if (r.smartview) sv++
     if (r.app) app++
-    if (r.smartCampaign) sc++
+    if (r.smartview) sv++
     if (r.smartviewVlp) svl++
+    if (r.smartCampaign) sc++
     arr += r.arr
   }
   return {
     key,
     rooftops: rows.length,
     enterprises: enterprises.size,
-    sv,
     app,
-    sc,
+    sv,
     svl,
+    sc,
     arr,
-    svPct: rows.length ? sv / rows.length : 0,
     appPct: rows.length ? app / rows.length : 0,
-    scPct: rows.length ? sc / rows.length : 0,
+    svPct: rows.length ? sv / rows.length : 0,
     svlPct: rows.length ? svl / rows.length : 0,
+    scPct: rows.length ? sc / rows.length : 0,
   }
 }
 
 export function computeKpis(rows) {
-  let sv = 0
   let app = 0
-  let sc = 0
+  let sv = 0
   let svl = 0
+  let sc = 0
   let arr = 0
   for (const r of rows) {
-    if (r.smartview) sv++
     if (r.app) app++
-    if (r.smartCampaign) sc++
+    if (r.smartview) sv++
     if (r.smartviewVlp) svl++
+    if (r.smartCampaign) sc++
     arr += r.arr
   }
-  return { total: rows.length, sv, app, sc, svl, arr }
+  return { total: rows.length, app, sv, svl, sc, arr }
 }
 
 export function byRooftopType(rows) {
@@ -113,10 +113,10 @@ export function byPeriod(rows, period) {
 
 export function byEnterprise(rows) {
   return [...groupBy(rows, (r) => r.enterpriseId).entries()].map(([id, rs]) => {
-    let sv = 0
     let app = 0
-    let sc = 0
+    let sv = 0
     let svl = 0
+    let sc = 0
     let live = 0
     let onboarding = 0
     let arr = 0
@@ -125,10 +125,10 @@ export function byEnterprise(rows) {
     const typeCount = {}
     const segmentCount = {}
     for (const r of rs) {
-      if (r.smartview) sv++
       if (r.app) app++
-      if (r.smartCampaign) sc++
+      if (r.smartview) sv++
       if (r.smartviewVlp) svl++
+      if (r.smartCampaign) sc++
       const stage = r.stage.toLowerCase()
       if (stage === 'live') live++
       else if (stage === 'onboarding') onboarding++
@@ -155,14 +155,14 @@ export function byEnterprise(rows) {
       rooftops: rs.length,
       live,
       onboarding,
-      sv,
       app,
-      sc,
+      sv,
       svl,
-      svPct: rs.length ? sv / rs.length : 0,
+      sc,
       appPct: rs.length ? app / rs.length : 0,
-      scPct: rs.length ? sc / rs.length : 0,
+      svPct: rs.length ? sv / rs.length : 0,
       svlPct: rs.length ? svl / rs.length : 0,
+      scPct: rs.length ? sc / rs.length : 0,
       csm,
       obPoc,
       arr,

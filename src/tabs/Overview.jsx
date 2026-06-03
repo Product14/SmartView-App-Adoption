@@ -14,14 +14,6 @@ const groupColumns = (firstLabel) => [
     csvValue: (r) => r.key,
   },
   {
-    key: 'rooftops',
-    label: '# Rooftops',
-    align: 'right',
-    render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>,
-    totalRender: (t) => fmtInt(t.rooftops),
-    csvValue: (r) => r.rooftops,
-  },
-  {
     key: 'enterprises',
     label: '# Enterprises',
     align: 'right',
@@ -30,40 +22,48 @@ const groupColumns = (firstLabel) => [
     csvValue: (r) => r.enterprises,
   },
   {
-    key: 'svPct',
-    label: 'SmartView - VDP %',
+    key: 'rooftops',
+    label: '# Rooftops',
     align: 'right',
-    sortValue: (r) => r.svPct,
-    render: (r) => <span className="font-semibold text-emerald-600">{pctOf(r.svPct)}</span>,
-    totalRender: (t) => pctOf(t.svPct),
-    csvValue: (r) => pctOf(r.svPct),
+    render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>,
+    totalRender: (t) => fmtInt(t.rooftops),
+    csvValue: (r) => r.rooftops,
   },
   {
     key: 'appPct',
-    label: 'App %',
+    label: 'App',
     align: 'right',
     sortValue: (r) => r.appPct,
-    render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>,
-    totalRender: (t) => pctOf(t.appPct),
-    csvValue: (r) => pctOf(r.appPct),
+    render: (r) => <span className="font-semibold text-sky-600">{fmtInt(r.app)} ({pctOf(r.appPct)})</span>,
+    totalRender: (t) => `${fmtInt(t.app)} (${pctOf(t.appPct)})`,
+    csvValue: (r) => `${fmtInt(r.app)} (${pctOf(r.appPct)})`,
   },
   {
-    key: 'scPct',
-    label: 'Smart Campaign %',
+    key: 'svPct',
+    label: 'SmartView - VDP',
     align: 'right',
-    sortValue: (r) => r.scPct,
-    render: (r) => <span className="font-semibold text-violet-600">{pctOf(r.scPct)}</span>,
-    totalRender: (t) => pctOf(t.scPct),
-    csvValue: (r) => pctOf(r.scPct),
+    sortValue: (r) => r.svPct,
+    render: (r) => <span className="font-semibold text-emerald-600">{fmtInt(r.sv)} ({pctOf(r.svPct)})</span>,
+    totalRender: (t) => `${fmtInt(t.sv)} (${pctOf(t.svPct)})`,
+    csvValue: (r) => `${fmtInt(r.sv)} (${pctOf(r.svPct)})`,
   },
   {
     key: 'svlPct',
-    label: 'SmartView VLP %',
+    label: 'SmartView VLP',
     align: 'right',
     sortValue: (r) => r.svlPct,
-    render: (r) => <span className="font-semibold text-amber-600">{pctOf(r.svlPct)}</span>,
-    totalRender: (t) => pctOf(t.svlPct),
-    csvValue: (r) => pctOf(r.svlPct),
+    render: (r) => <span className="font-semibold text-amber-600">{fmtInt(r.svl)} ({pctOf(r.svlPct)})</span>,
+    totalRender: (t) => `${fmtInt(t.svl)} (${pctOf(t.svlPct)})`,
+    csvValue: (r) => `${fmtInt(r.svl)} (${pctOf(r.svlPct)})`,
+  },
+  {
+    key: 'scPct',
+    label: 'Smart Campaign',
+    align: 'right',
+    sortValue: (r) => r.scPct,
+    render: (r) => <span className="font-semibold text-violet-600">{fmtInt(r.sc)} ({pctOf(r.scPct)})</span>,
+    totalRender: (t) => `${fmtInt(t.sc)} (${pctOf(t.scPct)})`,
+    csvValue: (r) => `${fmtInt(r.sc)} (${pctOf(r.scPct)})`,
   },
 ]
 
@@ -77,10 +77,14 @@ export default function Overview({ rows }) {
   const totalRow = {
     rooftops: kpis.total,
     enterprises: totalEnterprises,
-    svPct: kpis.total ? kpis.sv / kpis.total : 0,
+    app: kpis.app,
+    sv: kpis.sv,
+    svl: kpis.svl,
+    sc: kpis.sc,
     appPct: kpis.total ? kpis.app / kpis.total : 0,
-    scPct: kpis.total ? kpis.sc / kpis.total : 0,
+    svPct: kpis.total ? kpis.sv / kpis.total : 0,
     svlPct: kpis.total ? kpis.svl / kpis.total : 0,
+    scPct: kpis.total ? kpis.sc / kpis.total : 0,
   }
 
   // Newly Onboarded date range (default: previous 3 months).
@@ -107,12 +111,12 @@ export default function Overview({ rows }) {
 
   const periodColumns = [
     { key: 'key', label: period === 'week' ? 'Week' : 'Month', sortValue: (r) => r.key, render: (r) => <span className="font-semibold text-slate-800">{periodLabel(r.key)}</span>, csvValue: (r) => periodLabel(r.key) },
-    { key: 'rooftops', label: '# Rooftops', align: 'right', render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>, csvValue: (r) => r.rooftops },
     { key: 'enterprises', label: '# Enterprises', align: 'right', render: (r) => <span className="text-slate-600">{fmtInt(r.enterprises)}</span>, csvValue: (r) => r.enterprises },
-    { key: 'svPct', label: 'SmartView - VDP %', align: 'right', sortValue: (r) => r.svPct, render: (r) => <span className="font-semibold text-emerald-600">{pctOf(r.svPct)}</span>, csvValue: (r) => pctOf(r.svPct) },
-    { key: 'appPct', label: 'App %', align: 'right', sortValue: (r) => r.appPct, render: (r) => <span className="font-semibold text-sky-600">{pctOf(r.appPct)}</span>, csvValue: (r) => pctOf(r.appPct) },
-    { key: 'scPct', label: 'Smart Campaign %', align: 'right', sortValue: (r) => r.scPct, render: (r) => <span className="font-semibold text-violet-600">{pctOf(r.scPct)}</span>, csvValue: (r) => pctOf(r.scPct) },
-    { key: 'svlPct', label: 'SmartView VLP %', align: 'right', sortValue: (r) => r.svlPct, render: (r) => <span className="font-semibold text-amber-600">{pctOf(r.svlPct)}</span>, csvValue: (r) => pctOf(r.svlPct) },
+    { key: 'rooftops', label: '# Rooftops', align: 'right', render: (r) => <span className="font-semibold text-indigo-600">{fmtInt(r.rooftops)}</span>, csvValue: (r) => r.rooftops },
+    { key: 'appPct', label: 'App', align: 'right', sortValue: (r) => r.appPct, render: (r) => <span className="font-semibold text-sky-600">{fmtInt(r.app)} ({pctOf(r.appPct)})</span>, csvValue: (r) => `${fmtInt(r.app)} (${pctOf(r.appPct)})` },
+    { key: 'svPct', label: 'SmartView - VDP', align: 'right', sortValue: (r) => r.svPct, render: (r) => <span className="font-semibold text-emerald-600">{fmtInt(r.sv)} ({pctOf(r.svPct)})</span>, csvValue: (r) => `${fmtInt(r.sv)} (${pctOf(r.svPct)})` },
+    { key: 'svlPct', label: 'SmartView VLP', align: 'right', sortValue: (r) => r.svlPct, render: (r) => <span className="font-semibold text-amber-600">{fmtInt(r.svl)} ({pctOf(r.svlPct)})</span>, csvValue: (r) => `${fmtInt(r.svl)} (${pctOf(r.svlPct)})` },
+    { key: 'scPct', label: 'Smart Campaign', align: 'right', sortValue: (r) => r.scPct, render: (r) => <span className="font-semibold text-violet-600">{fmtInt(r.sc)} ({pctOf(r.scPct)})</span>, csvValue: (r) => `${fmtInt(r.sc)} (${pctOf(r.scPct)})` },
   ]
 
   return (
@@ -121,28 +125,28 @@ export default function Overview({ rows }) {
       <div className="flex flex-col gap-4 sm:flex-row">
         <KpiCard label="Total Rooftops" value={fmtInt(kpis.total)} sub="Live & OB" accent="indigo" />
         <KpiCard
-          label="SmartView Adoption"
-          value={fmtInt(kpis.sv)}
-          sub={`${pct(kpis.sv, kpis.total)} of total`}
-          accent="green"
-        />
-        <KpiCard
           label="App Adoption"
           value={fmtInt(kpis.app)}
           sub={`${pct(kpis.app, kpis.total)} of total`}
           accent="blue"
         />
         <KpiCard
-          label="Smart Campaign Adoption"
-          value={fmtInt(kpis.sc)}
-          sub={`${pct(kpis.sc, kpis.total)} of total`}
-          accent="violet"
+          label="SmartView VDP Adoption"
+          value={fmtInt(kpis.sv)}
+          sub={`${pct(kpis.sv, kpis.total)} of total`}
+          accent="green"
         />
         <KpiCard
           label="SmartView VLP Adoption"
           value={fmtInt(kpis.svl)}
           sub={`${pct(kpis.svl, kpis.total)} of total`}
           accent="amber"
+        />
+        <KpiCard
+          label="Smart Campaign Adoption"
+          value={fmtInt(kpis.sc)}
+          sub={`${pct(kpis.sc, kpis.total)} of total`}
+          accent="violet"
         />
       </div>
 

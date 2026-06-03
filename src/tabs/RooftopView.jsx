@@ -45,10 +45,10 @@ export default function RooftopView({ rows }) {
   const [csm, setCsm] = useState('')
   const [obPoc, setObPoc] = useState('')
   const [segment, setSegment] = useState('')
-  const [sv, setSv] = useState('')
   const [app, setApp] = useState('')
-  const [sc, setSc] = useState('')
+  const [sv, setSv] = useState('')
   const [svl, setSvl] = useState('')
+  const [sc, setSc] = useState('')
 
   const stageOptions = useMemo(() => distinct(rows.map((r) => r.stage)).map((v) => ({ value: v, label: v })), [rows])
   const typeOptions = useMemo(() => distinct(rows.map(typeOf)).map((v) => ({ value: v, label: noUnderscore(v) })), [rows])
@@ -68,10 +68,10 @@ export default function RooftopView({ rows }) {
       if (csm && r.csm !== csm) return false
       if (obPoc && r.obPoc !== obPoc) return false
       if (segment && r.customerSegment !== segment) return false
-      if (sv && (sv === 'Yes') !== r.smartview) return false
       if (app && (app === 'Yes') !== r.app) return false
-      if (sc && (sc === 'Yes') !== r.smartCampaign) return false
+      if (sv && (sv === 'Yes') !== r.smartview) return false
       if (svl && (svl === 'Yes') !== r.smartviewVlp) return false
+      if (sc && (sc === 'Yes') !== r.smartCampaign) return false
       if (
         q &&
         !r.teamName.toLowerCase().includes(q) &&
@@ -114,10 +114,10 @@ export default function RooftopView({ rows }) {
     { key: 'customerSegment', label: 'Customer Segment', render: (r) => <Pill color={SEGMENT_COLOR[r.customerSegment]}>{r.customerSegment}</Pill>, csvValue: (r) => r.customerSegment },
     { key: 'csm', label: 'CSM', sortValue: (r) => r.csm, render: (r) => <span className="text-slate-600">{shortEmail(r.csm)}</span>, csvValue: (r) => r.csm },
     { key: 'obPoc', label: 'OB POC', sortValue: (r) => r.obPoc, render: (r) => <span className="text-slate-600">{shortEmail(r.obPoc)}</span>, csvValue: (r) => r.obPoc },
-    { key: 'smartview', label: 'SmartView VDP', align: 'center', sortValue: (r) => (r.smartview ? 1 : 0), render: (r) => <Pill color={r.smartview ? 'green' : 'slate'}>{r.smartview ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartview ? 'Yes' : 'No') },
     { key: 'app', label: 'App Adoption', align: 'center', sortValue: (r) => (r.app ? 1 : 0), render: (r) => <Pill color={r.app ? 'green' : 'slate'}>{r.app ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.app ? 'Yes' : 'No') },
-    { key: 'smartCampaign', label: 'Smart Campaign', align: 'center', sortValue: (r) => (r.smartCampaign ? 1 : 0), render: (r) => <Pill color={r.smartCampaign ? 'green' : 'slate'}>{r.smartCampaign ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartCampaign ? 'Yes' : 'No') },
+    { key: 'smartview', label: 'SmartView VDP', align: 'center', sortValue: (r) => (r.smartview ? 1 : 0), render: (r) => <Pill color={r.smartview ? 'green' : 'slate'}>{r.smartview ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartview ? 'Yes' : 'No') },
     { key: 'smartviewVlp', label: 'SmartView VLP', align: 'center', sortValue: (r) => (r.smartviewVlp ? 1 : 0), render: (r) => <Pill color={r.smartviewVlp ? 'green' : 'slate'}>{r.smartviewVlp ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartviewVlp ? 'Yes' : 'No') },
+    { key: 'smartCampaign', label: 'Smart Campaign', align: 'center', sortValue: (r) => (r.smartCampaign ? 1 : 0), render: (r) => <Pill color={r.smartCampaign ? 'green' : 'slate'}>{r.smartCampaign ? 'Yes' : 'No'}</Pill>, csvValue: (r) => (r.smartCampaign ? 'Yes' : 'No') },
     { key: 'arr', label: 'Contracted ARR', align: 'right', sortValue: (r) => r.arr, render: (r) => <span className="font-semibold text-slate-900">{fmtMoney(r.arr)}</span>, csvValue: (r) => Math.round(r.arr) },
     { key: 'liveDate', label: 'Live Date', sortValue: (r) => r.liveYMD || '', render: (r) => <span className="text-slate-600">{ymdLabel(r.liveYMD)}</span>, csvValue: (r) => r.liveYMD || '' },
   ]
@@ -134,10 +134,10 @@ export default function RooftopView({ rows }) {
           { label: 'All CSMs', value: csm, onChange: setCsm, options: csmOptions },
           { label: 'All OB POCs', value: obPoc, onChange: setObPoc, options: obOptions },
           { label: 'All Segments', value: segment, onChange: setSegment, options: segmentOptions },
-          { label: 'SmartView: All', value: sv, onChange: setSv, options: yesNo },
           { label: 'App: All', value: app, onChange: setApp, options: yesNo },
-          { label: 'Smart Campaign: All', value: sc, onChange: setSc, options: yesNo },
+          { label: 'SmartView: All', value: sv, onChange: setSv, options: yesNo },
           { label: 'SmartView VLP: All', value: svl, onChange: setSvl, options: yesNo },
+          { label: 'Smart Campaign: All', value: sc, onChange: setSc, options: yesNo },
         ]}
         showClear={hasFilters}
         onClear={() => {
@@ -147,10 +147,10 @@ export default function RooftopView({ rows }) {
           setCsm('')
           setObPoc('')
           setSegment('')
-          setSv('')
           setApp('')
-          setSc('')
+          setSv('')
           setSvl('')
+          setSc('')
         }}
       />
       <DataTable

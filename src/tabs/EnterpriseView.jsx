@@ -33,10 +33,10 @@ export default function EnterpriseView({ rows }) {
   const [csm, setCsm] = useState('')
   const [obPoc, setObPoc] = useState('')
   const [segment, setSegment] = useState('')
-  const [sv, setSv] = useState('')
   const [app, setApp] = useState('')
-  const [sc, setSc] = useState('')
+  const [sv, setSv] = useState('')
   const [svl, setSvl] = useState('')
+  const [sc, setSc] = useState('')
 
   // Enterprise metrics are percentages; "Yes" = any adoption (>0%), "No" = none (0%).
   const yesNo = [
@@ -69,10 +69,10 @@ export default function EnterpriseView({ rows }) {
       if (csm && e.csm !== csm) return false
       if (obPoc && e.obPoc !== obPoc) return false
       if (segment && e.customerSegment !== segment) return false
-      if (!matchPct(sv, e.svPct)) return false
       if (!matchPct(app, e.appPct)) return false
-      if (!matchPct(sc, e.scPct)) return false
+      if (!matchPct(sv, e.svPct)) return false
       if (!matchPct(svl, e.svlPct)) return false
+      if (!matchPct(sc, e.scPct)) return false
       if (q && !e.enterpriseName.toLowerCase().includes(q) && !e.enterpriseId.toLowerCase().includes(q))
         return false
       return true
@@ -97,10 +97,10 @@ export default function EnterpriseView({ rows }) {
     { key: 'rooftops', label: '# Rooftops', align: 'right', render: (e) => <span className="font-semibold text-indigo-600">{fmtInt(e.rooftops)}</span> },
     { key: 'live', label: '# Live', align: 'right', render: (e) => <span className="font-semibold text-emerald-600">{fmtInt(e.live)}</span> },
     { key: 'onboarding', label: '# Onboarding', align: 'right', render: (e) => <span className="font-semibold text-amber-600">{fmtInt(e.onboarding)}</span> },
-    { key: 'svPct', label: 'SmartView VDP %', align: 'right', sortValue: (e) => e.svPct, render: (e) => <span className="font-semibold text-emerald-600">{pctOf(e.svPct)}</span>, csvValue: (e) => pctOf(e.svPct) },
-    { key: 'appPct', label: 'App %', align: 'right', sortValue: (e) => e.appPct, render: (e) => <span className="font-semibold text-sky-600">{pctOf(e.appPct)}</span>, csvValue: (e) => pctOf(e.appPct) },
-    { key: 'scPct', label: 'Smart Campaign %', align: 'right', sortValue: (e) => e.scPct, render: (e) => <span className="font-semibold text-violet-600">{pctOf(e.scPct)}</span>, csvValue: (e) => pctOf(e.scPct) },
-    { key: 'svlPct', label: 'SmartView VLP %', align: 'right', sortValue: (e) => e.svlPct, render: (e) => <span className="font-semibold text-amber-600">{pctOf(e.svlPct)}</span>, csvValue: (e) => pctOf(e.svlPct) },
+    { key: 'appPct', label: 'App', align: 'right', sortValue: (e) => e.appPct, render: (e) => <span className="font-semibold text-sky-600">{fmtInt(e.app)} ({pctOf(e.appPct)})</span>, csvValue: (e) => `${fmtInt(e.app)} (${pctOf(e.appPct)})` },
+    { key: 'svPct', label: 'SmartView VDP', align: 'right', sortValue: (e) => e.svPct, render: (e) => <span className="font-semibold text-emerald-600">{fmtInt(e.sv)} ({pctOf(e.svPct)})</span>, csvValue: (e) => `${fmtInt(e.sv)} (${pctOf(e.svPct)})` },
+    { key: 'svlPct', label: 'SmartView VLP', align: 'right', sortValue: (e) => e.svlPct, render: (e) => <span className="font-semibold text-amber-600">{fmtInt(e.svl)} ({pctOf(e.svlPct)})</span>, csvValue: (e) => `${fmtInt(e.svl)} (${pctOf(e.svlPct)})` },
+    { key: 'scPct', label: 'Smart Campaign', align: 'right', sortValue: (e) => e.scPct, render: (e) => <span className="font-semibold text-violet-600">{fmtInt(e.sc)} ({pctOf(e.scPct)})</span>, csvValue: (e) => `${fmtInt(e.sc)} (${pctOf(e.scPct)})` },
     { key: 'csm', label: 'CSM', sortValue: (e) => e.csm, render: (e) => <span className="text-slate-600">{shortEmail(e.csm)}</span>, csvValue: (e) => e.csm },
     { key: 'obPoc', label: 'OB POC', sortValue: (e) => e.obPoc, render: (e) => <span className="text-slate-600">{shortEmail(e.obPoc)}</span>, csvValue: (e) => e.obPoc },
     { key: 'arr', label: 'Total ARR', align: 'right', sortValue: (e) => e.arr, render: (e) => <span className="font-semibold text-slate-900">{fmtMoney(e.arr)}</span>, csvValue: (e) => Math.round(e.arr) },
@@ -117,10 +117,10 @@ export default function EnterpriseView({ rows }) {
           { label: 'All Segments', value: segment, onChange: setSegment, options: segmentOptions },
           { label: 'All CSMs', value: csm, onChange: setCsm, options: csmOptions },
           { label: 'All OB POCs', value: obPoc, onChange: setObPoc, options: obOptions },
-          { label: 'SmartView VDP: All', value: sv, onChange: setSv, options: yesNo },
           { label: 'App: All', value: app, onChange: setApp, options: yesNo },
-          { label: 'Smart Campaign: All', value: sc, onChange: setSc, options: yesNo },
+          { label: 'SmartView VDP: All', value: sv, onChange: setSv, options: yesNo },
           { label: 'SmartView VLP: All', value: svl, onChange: setSvl, options: yesNo },
+          { label: 'Smart Campaign: All', value: sc, onChange: setSc, options: yesNo },
         ]}
         showClear={hasFilters}
         onClear={() => {
@@ -129,10 +129,10 @@ export default function EnterpriseView({ rows }) {
           setCsm('')
           setObPoc('')
           setSegment('')
-          setSv('')
           setApp('')
-          setSc('')
+          setSv('')
           setSvl('')
+          setSc('')
         }}
       />
       <DataTable

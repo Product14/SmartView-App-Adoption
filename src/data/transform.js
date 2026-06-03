@@ -47,11 +47,11 @@ export function transformRows(rawRows) {
         subType,
         rooftopType: deriveRooftopType(teamType, subType),
         customerSegment: norm(r.customer_segment) || 'Unspecified',
+        app: isYes(r.app_adoption),
         // Support either the current header (Smartview_vdp_enabled) or a rename.
         smartview: isYes(r.Smartview_vdp_enabled ?? r.Smartview_vdp ?? r.smartview_vdp),
-        app: isYes(r.app_adoption),
-        smartCampaign: isYes(r.smart_campaign_adoption),
         smartviewVlp: isYes(r.Smartview_vlp_enabled),
+        smartCampaign: isYes(r.smart_campaign_adoption),
         liveDate,
         liveYMD,
         liveMonth: liveYMD ? liveYMD.slice(0, 7) : null,
