@@ -52,6 +52,8 @@ export function transformRows(rawRows) {
         smartview: isYes(r.Smartview_vdp_enabled ?? r.Smartview_vdp ?? r.smartview_vdp),
         smartviewVlp: isYes(r.Smartview_vlp_enabled),
         smartCampaign: isYes(r.smart_campaign_adoption),
+        // Active = processed an image in the last 30 days.
+        active: isYes(r.Active ?? r.active),
         liveDate,
         liveYMD,
         liveMonth: liveYMD ? liveYMD.slice(0, 7) : null,

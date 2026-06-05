@@ -81,7 +81,7 @@ export default function Overview({ rows }) {
     sv: kpis.sv,
     svl: kpis.svl,
     sc: kpis.sc,
-    appPct: kpis.total ? kpis.app / kpis.total : 0,
+    appPct: kpis.active ? kpis.app / kpis.active : 0,
     svPct: kpis.total ? kpis.sv / kpis.total : 0,
     svlPct: kpis.total ? kpis.svl / kpis.total : 0,
     scPct: kpis.total ? kpis.sc / kpis.total : 0,
@@ -125,9 +125,15 @@ export default function Overview({ rows }) {
       <div className="flex flex-col gap-4 sm:flex-row">
         <KpiCard label="Total Rooftops" value={fmtInt(kpis.total)} sub="Live & OB" accent="indigo" />
         <KpiCard
+          label="Active Rooftops"
+          value={fmtInt(kpis.active)}
+          sub={`${pct(kpis.active, kpis.total)} of total`}
+          accent="green"
+        />
+        <KpiCard
           label="App Adoption"
           value={fmtInt(kpis.app)}
-          sub={`${pct(kpis.app, kpis.total)} of total`}
+          sub={`${pct(kpis.app, kpis.active)} of active`}
           accent="blue"
         />
         <KpiCard

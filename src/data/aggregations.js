@@ -24,6 +24,7 @@ function rollup(key, rows) {
   let sv = 0
   let svl = 0
   let sc = 0
+  let active = 0
   let arr = 0
   for (const r of rows) {
     enterprises.add(r.enterpriseId)
@@ -31,6 +32,7 @@ function rollup(key, rows) {
     if (r.smartview) sv++
     if (r.smartviewVlp) svl++
     if (r.smartCampaign) sc++
+    if (r.active) active++
     arr += r.arr
   }
   return {
@@ -41,8 +43,10 @@ function rollup(key, rows) {
     sv,
     svl,
     sc,
+    active,
     arr,
-    appPct: rows.length ? app / rows.length : 0,
+    // App adoption is measured against active rooftops; the rest stay vs total.
+    appPct: active ? app / active : 0,
     svPct: rows.length ? sv / rows.length : 0,
     svlPct: rows.length ? svl / rows.length : 0,
     scPct: rows.length ? sc / rows.length : 0,
@@ -54,15 +58,17 @@ export function computeKpis(rows) {
   let sv = 0
   let svl = 0
   let sc = 0
+  let active = 0
   let arr = 0
   for (const r of rows) {
     if (r.app) app++
     if (r.smartview) sv++
     if (r.smartviewVlp) svl++
     if (r.smartCampaign) sc++
+    if (r.active) active++
     arr += r.arr
   }
-  return { total: rows.length, app, sv, svl, sc, arr }
+  return { total: rows.length, app, sv, svl, sc, active, arr }
 }
 
 export function byRooftopType(rows) {
@@ -117,6 +123,7 @@ export function byEnterprise(rows) {
     let sv = 0
     let svl = 0
     let sc = 0
+    let active = 0
     let live = 0
     let onboarding = 0
     let arr = 0
@@ -129,6 +136,7 @@ export function byEnterprise(rows) {
       if (r.smartview) sv++
       if (r.smartviewVlp) svl++
       if (r.smartCampaign) sc++
+      if (r.active) active++
       const stage = r.stage.toLowerCase()
       if (stage === 'live') live++
       else if (stage === 'onboarding') onboarding++
@@ -159,7 +167,9 @@ export function byEnterprise(rows) {
       sv,
       svl,
       sc,
-      appPct: rs.length ? app / rs.length : 0,
+      active,
+      // App adoption is measured against active rooftops; the rest stay vs total.
+      appPct: active ? app / active : 0,
       svPct: rs.length ? sv / rs.length : 0,
       svlPct: rs.length ? svl / rs.length : 0,
       scPct: rs.length ? sc / rs.length : 0,

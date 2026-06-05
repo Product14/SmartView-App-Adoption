@@ -69,7 +69,9 @@ export default function EnterpriseView({ rows }) {
       if (csm && e.csm !== csm) return false
       if (obPoc && e.obPoc !== obPoc) return false
       if (segment && e.customerSegment !== segment) return false
-      if (!matchPct(app, e.appPct)) return false
+      // App filter means "has any app adoption"; test the raw count so it stays
+      // correct now that appPct is measured against active rooftops (can be 0).
+      if (!matchPct(app, e.app)) return false
       if (!matchPct(sv, e.svPct)) return false
       if (!matchPct(svl, e.svlPct)) return false
       if (!matchPct(sc, e.scPct)) return false
