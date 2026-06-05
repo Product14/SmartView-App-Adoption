@@ -33,12 +33,29 @@ npm run dev      # http://localhost:5173
 npm run build    # outputs to dist/
 ```
 
+## Daily report email
+
+[api/scheduled-report.js](api/scheduled-report.js) is a Vercel serverless function, triggered
+once a day by a Vercel cron (`30 7 * * *` = **1 PM IST**, see [vercel.json](vercel.json)). It
+fetches the same sheet, runs the same transform + aggregations, and emails the Overview content
+(the 6 KPI cards + By Customer Segment / By Rooftop Type / By CSM tables — **excluding Newly
+Onboarded Clients**) as an HTML email via the internal email API, reusing VIN Tracker's pattern.
+
+- **HTML** is built in [api/\_emailTemplate.js](api/_emailTemplate.js); **sending** in
+  [api/\_emailClient.js](api/_emailClient.js). (`_`-prefixed files aren't routed by Vercel.)
+- **Env vars** (set in Vercel): `CRON_SECRET` (cron auth — the endpoint is open when unset, so
+  local runs need no header), `INTERNAL_EMAIL_API_URL`, `EMAIL_TO` (required), `EMAIL_CC`,
+  `EMAIL_BCC`, `FROM`, `DASHBOARD_URL` (optional CTA link). See [.env.example](.env.example).
+- **Preview:** `GET /api/scheduled-report?preview=1` returns the rendered HTML without sending.
+
 ## Deploy (Vercel)
 
-- Framework preset: Vite (build `npm run build`, output `dist`). Serverless function in `api/`
-  is detected automatically. No `vercel.json` needed.
+- Framework preset: Vite (build `npm run build`, output `dist`). Serverless functions in `api/`
+  are detected automatically. [vercel.json](vercel.json) adds only the cron + function config
+  (no rewrites), so the Vite preset still handles the build and SPA fallback.
 - Optional env var `SHEET_CSV_URL` overrides the default sheet CSV endpoint (set in Vercel
   Project → Settings → Environment Variables). Defaults are baked in as a fallback.
+- For the daily email to send, set the report env vars listed above.
 
 ## Derived field notes
 

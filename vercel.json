@@ -1,0 +1,4 @@
+{
+  "crons": [{ "path": "/api/scheduled-report", "schedule": "30 7 * * *" }],
+  "functions": { "api/scheduled-report.js": { "maxDuration": 60 } }
+}

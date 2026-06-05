@@ -59,6 +59,7 @@ export function computeKpis(rows) {
   let svl = 0
   let sc = 0
   let active = 0
+  let live = 0
   let arr = 0
   for (const r of rows) {
     if (r.app) app++
@@ -66,9 +67,10 @@ export function computeKpis(rows) {
     if (r.smartviewVlp) svl++
     if (r.smartCampaign) sc++
     if (r.active) active++
+    if (r.stage && r.stage.toLowerCase() === 'live') live++
     arr += r.arr
   }
-  return { total: rows.length, app, sv, svl, sc, active, arr }
+  return { total: rows.length, app, sv, svl, sc, active, live, arr }
 }
 
 export function byRooftopType(rows) {
@@ -78,7 +80,7 @@ export function byRooftopType(rows) {
 }
 
 // Display order for the customer-segment buckets.
-export const SEGMENT_ORDER = ['Ent', 'SMB', 'Resellers', 'Unspecified']
+export const SEGMENT_ORDER = ['Ent', 'Mid', 'SMB', 'Resellers', 'Unspecified']
 
 export function byCustomerSegment(rows) {
   const out = [...groupBy(rows, (r) => r.customerSegment).entries()].map(([k, rs]) => rollup(k, rs))
