@@ -160,15 +160,15 @@ export function buildEmailHtml({ kpis, totalRow, segmentRows, csmRows }) {
       ${kpiCard('Smart Campaign Adoption', fmtInt(kpis.sc), `${pct(kpis.sc, kpis.total)} of total`, '#7c3aed', '25%')}
     </tr>`
 
-  const dashboardUrl = (process.env.DASHBOARD_URL || '').replace(/\/$/, '')
+  const dashboardUrl = (process.env.DASHBOARD_URL || 'https://studio-adoption.vercel.app/').replace(/\/$/, '')
   const ctaHtml = dashboardUrl
     ? `
     <tr>
       <td style="padding:28px 0 8px; text-align:center;">
-        <a href="${dashboardUrl}"
+        <a href="${dashboardUrl}" target="_blank" rel="noopener noreferrer"
            style="display:inline-block; background:${ACCENT_COLOR}; color:#fff; font-size:14px; font-weight:600;
                   text-decoration:none; padding:12px 32px; border-radius:6px; letter-spacing:0.02em;">
-          View Full Dashboard →
+          Open Dashboard →
         </a>
       </td>
     </tr>`
@@ -221,15 +221,6 @@ export function buildEmailHtml({ kpis, totalRow, segmentRows, csmRows }) {
                 ${ctaHtml}
 
               </table>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background:${GRAY_BG}; border-top:1px solid ${BORDER_COLOR}; padding:16px 32px; text-align:center;">
-              <div style="font-size:11px; color:${TEXT_MUTED};">
-                Automated daily report from the SmartView App Adoption dashboard.
-              </div>
             </td>
           </tr>
 
