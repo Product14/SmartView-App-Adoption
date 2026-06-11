@@ -6,3 +6,4 @@ dist
 *.log
 .DS_Store
 report-preview.html
+studio-health-preview.html

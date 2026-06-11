@@ -3,6 +3,16 @@
 const norm = (v) => (v ?? '').toString().trim()
 const isYes = (v) => norm(v).toLowerCase() === 'yes'
 
+// Stages that count as an operational rooftop. The source sheet also carries
+// "Contracted" (and may carry "Churned" etc.). The dashboard and the daily adoption
+// report operate on the Live/Onboarding subset; the Studio Health Report's funnel
+// section needs the full set (see normalizeRows vs transformRows below).
+export const OPERATIONAL_STAGES = ['live', 'onboarding']
+
+export function operationalRooftops(rows) {
+  return rows.filter((r) => OPERATIONAL_STAGES.includes((r.stage || '').toLowerCase()))
+}
+
 // Derived "Rooftop Type" — Franchise/Independent (team_sub_type) crossed with
 // Group/Individual (team_type). Mirrors the source SQL CASE exactly: anything
 // not matching the four dealer combinations (incl. blank type) falls to Others.
@@ -20,7 +30,9 @@ export function deriveRooftopType(teamType, subType) {
 const teamIdOf = (r) => norm(r['lt.team_id'] ?? r['team_id'])
 const enterpriseIdOf = (r) => norm(r['lt.enterprise_id'] ?? r['enterprise_id'])
 
-export function transformRows(rawRows) {
+// Pure normalization of raw CSV rows → typed objects, keeping ALL stages
+// (incl. Contracted/Churned). The Studio Health Report funnel reads this directly.
+export function normalizeRows(rawRows) {
   return rawRows
     .filter((r) => teamIdOf(r) !== '')
     .map((r) => {
@@ -47,6 +59,8 @@ export function transformRows(rawRows) {
         subType,
         rooftopType: deriveRooftopType(teamType, subType),
         customerSegment: norm(r.customer_segment) || 'Unspecified',
+        // Raw pricing plan from the sheet (e.g. "Studio - Lite"); bucketed in aggregations.
+        plan: norm(r.plan ?? r.Plan),
         app: isYes(r.app_adoption),
         // Support either the current header (Smartview_vdp_enabled) or a rename.
         smartview: isYes(r.Smartview_vdp_enabled ?? r.Smartview_vdp ?? r.smartview_vdp),
@@ -59,4 +73,10 @@ export function transformRows(rawRows) {
         liveMonth: liveYMD ? liveYMD.slice(0, 7) : null,
       }
     })
+}
+
+// Operational rooftops only (Live/Onboarding) — what the dashboard and the daily
+// adoption report consume. Behaviour is unchanged for those callers.
+export function transformRows(rawRows) {
+  return operationalRooftops(normalizeRows(rawRows))
 }

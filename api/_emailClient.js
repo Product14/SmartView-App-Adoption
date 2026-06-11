@@ -29,10 +29,11 @@ function subjectStamp() {
 }
 
 /**
- * Sends the SmartView adoption snapshot email via the internal email API.
- * @param {string} html  Full HTML string built by _emailTemplate.js
+ * Sends a report email via the internal email API.
+ * @param {string} html           Full HTML string built by a template module
+ * @param {string} subjectPrefix  Subject text before the timestamp (defaults to the daily report)
  */
-export async function sendReport(html) {
+export async function sendReport(html, subjectPrefix = 'Studio Adoption Report') {
   const url = process.env.INTERNAL_EMAIL_API_URL
   if (!url) throw new Error('INTERNAL_EMAIL_API_URL env var is not set')
 
@@ -48,7 +49,7 @@ export async function sendReport(html) {
     ...(cc.length > 0 && { cc }),
     ...(bcc.length > 0 && { bcc }),
     ...(from && { from }),
-    subject: `Studio Adoption Report - ${subjectStamp()}`,
+    subject: `${subjectPrefix} - ${subjectStamp()}`,
     // Generic HTML-passthrough template on the internal email service — it just
     // injects templateData.HTMLdata into the email body.
     template: 'email-control-tower-report',

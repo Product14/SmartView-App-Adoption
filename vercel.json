@@ -1,4 +1,10 @@
 {
-  "crons": [{ "path": "/api/scheduled-report", "schedule": "30 7 * * *" }],
-  "functions": { "api/scheduled-report.js": { "maxDuration": 60 } }
+  "crons": [
+    { "path": "/api/scheduled-report", "schedule": "30 7 * * *" },
+    { "path": "/api/studio-health-report", "schedule": "0 8 * * *" }
+  ],
+  "functions": {
+    "api/scheduled-report.js": { "maxDuration": 60 },
+    "api/studio-health-report.js": { "maxDuration": 60 }
+  }
 }

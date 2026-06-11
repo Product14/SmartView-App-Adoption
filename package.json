@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "report:preview": "node scripts/report.mjs && open report-preview.html",
-    "report:send": "node scripts/report.mjs send"
+    "report:send": "node scripts/report.mjs send",
+    "studio-health:preview": "node scripts/studio-health-report.mjs && open studio-health-preview.html",
+    "studio-health:send": "node scripts/studio-health-report.mjs send"
   },
   "dependencies": {
     "papaparse": "^5.4.1",

@@ -25,11 +25,11 @@ function devApi() {
         }
       })
 
-      // /api/scheduled-report — run the actual serverless handler, adapting the
-      // raw Node req/res to the Vercel-style API the handler expects.
-      server.middlewares.use('/api/scheduled-report', async (req, res) => {
+      // Adapt raw Node req/res to the Vercel-style API the serverless handlers
+      // expect, then run the real handler module.
+      const runHandler = (modulePath, label) => async (req, res) => {
         try {
-          const { default: handler } = await import('./api/scheduled-report.js')
+          const { default: handler } = await import(modulePath)
           const url = new URL(req.url, 'http://localhost')
           req.query = Object.fromEntries(url.searchParams)
           res.status = (code) => {
@@ -44,9 +44,21 @@ function devApi() {
           await handler(req, res)
         } catch (e) {
           res.statusCode = 500
-          res.end('scheduled-report dev error: ' + e.message)
+          res.end(`${label} dev error: ` + e.message)
         }
-      })
+      }
+
+      // /api/scheduled-report — the daily adoption report.
+      server.middlewares.use(
+        '/api/scheduled-report',
+        runHandler('./api/scheduled-report.js', 'scheduled-report'),
+      )
+
+      // /api/studio-health-report — the daily studio health report.
+      server.middlewares.use(
+        '/api/studio-health-report',
+        runHandler('./api/studio-health-report.js', 'studio-health-report'),
+      )
     },
   }
 }

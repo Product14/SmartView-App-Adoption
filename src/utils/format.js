@@ -18,6 +18,14 @@ export function fmtMoney(n) {
   return '$' + Math.round(n ?? 0).toLocaleString('en-US')
 }
 
+// Compact money: 5_070_000 -> "$5.07M", 115_000 -> "$115K", 900 -> "$900".
+export function fmtMoneyCompact(n) {
+  const v = n ?? 0
+  if (Math.abs(v) >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M'
+  if (Math.abs(v) >= 1e3) return '$' + Math.round(v / 1e3) + 'K'
+  return '$' + Math.round(v)
+}
+
 export function pct(value, total) {
   if (!total) return '0%'
   return Math.round((value / total) * 100) + '%'

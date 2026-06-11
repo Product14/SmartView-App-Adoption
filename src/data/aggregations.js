@@ -53,6 +53,56 @@ function rollup(key, rows) {
   }
 }
 
+// Funnel order for lifecycle stages. Substring match so label variants (e.g.
+// "In Onboarding") still rank correctly; unknown stages sort last.
+export const STAGE_ORDER = ['contracted', 'onboarding', 'live', 'churned']
+
+export function stageRank(stage) {
+  const s = (stage || '').toLowerCase()
+  const i = STAGE_ORDER.findIndex((k) => s.includes(k))
+  return i === -1 ? STAGE_ORDER.length : i
+}
+
+// Group by the per-rooftop lifecycle stage for the Studio Health Report funnel.
+// Accounts = distinct enterprise_id, Rooftops = distinct team_id, Active = distinct
+// active team_id (image in last 30 days), Arr = sum of contracted_arr. Operates on the
+// FULL row set (every stage). An enterprise can have rooftops in more than one stage, so
+// the distinct Total accounts may be lower than the sum of the per-stage account counts.
+export function byStage(rows) {
+  const out = [...groupBy(rows, (r) => r.stage).entries()].map(([stage, rs]) => {
+    const accounts = new Set()
+    const rooftops = new Set()
+    const active = new Set()
+    let arr = 0
+    for (const r of rs) {
+      accounts.add(r.enterpriseId)
+      rooftops.add(r.teamId)
+      if (r.active) active.add(r.teamId)
+      arr += r.arr
+    }
+    return { stage, accounts: accounts.size, rooftops: rooftops.size, active: active.size, arr }
+  })
+  out.sort((a, b) => stageRank(a.stage) - stageRank(b.stage))
+  return out
+}
+
+// Funnel total row: distinct accounts/rooftops/active across ALL stages + total ARR.
+// Accounts is distinct enterprise_id over the whole set (an enterprise can span
+// stages), so it may be less than the sum of the per-stage account counts.
+export function stageTotals(rows) {
+  const accounts = new Set()
+  const rooftops = new Set()
+  const active = new Set()
+  let arr = 0
+  for (const r of rows) {
+    accounts.add(r.enterpriseId)
+    rooftops.add(r.teamId)
+    if (r.active) active.add(r.teamId)
+    arr += r.arr
+  }
+  return { accounts: accounts.size, rooftops: rooftops.size, active: active.size, arr }
+}
+
 export function computeKpis(rows) {
   let app = 0
   let sv = 0
@@ -96,6 +146,29 @@ export function byCSM(rows) {
   const out = [...groupBy(rows, (r) => r.csm).entries()].map(([k, rs]) => rollup(k, rs))
   out.sort((a, b) => b.rooftops - a.rooftops)
   return out
+}
+
+// Bucket a raw plan value into the three studio tiers. Anything that isn't
+// clearly Lite or Pro falls to Others (incl. blank/Enterprise/etc.).
+export function classifyPlan(plan) {
+  const p = (plan ?? '').toString().toLowerCase()
+  if (p.includes('lite')) return 'Studio - Lite'
+  if (p.includes('pro')) return 'Studio - Pro'
+  return 'Studio - Others'
+}
+
+// Rooftop counts per studio plan tier, for the Studio Health Report KPIs.
+export function planCounts(rows) {
+  let lite = 0
+  let pro = 0
+  let others = 0
+  for (const r of rows) {
+    const tier = classifyPlan(r.plan)
+    if (tier === 'Studio - Lite') lite++
+    else if (tier === 'Studio - Pro') pro++
+    else others++
+  }
+  return { lite, pro, others, total: rows.length }
 }
 
 const pad2 = (n) => String(n).padStart(2, '0')
