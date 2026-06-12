@@ -46,7 +46,7 @@ export async function buildHtml() {
   const healthMap = parseMatrix(Papa.parse(healthCsv, { header: false, skipEmptyLines: false }).data)
   const adoptionMap = parseMatrix(Papa.parse(adoptionCsv, { header: false, skipEmptyLines: false }).data)
 
-  const payload = buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap })
+  const payload = await buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap })
   return { html: buildStudioHealthHtml(payload), rooftops: rooftopRows.length }
 }
 

@@ -20,6 +20,7 @@ const TEXT_FAINT = '#9ca3af' // trend columns (D-1..M-2)
 const EYEBROW = '#0ea5e9'
 const PILL_BG = '#1c1c1e'
 const LAVENDER = '#f5f3ff' // very light lavender fill for the M-1/M-2 columns
+const CALLOUT_BG = '#ededf1' // commentary box fill
 
 // Per-section accent (left bar) colors.
 const SEC = {
@@ -98,6 +99,56 @@ function sectionTitle(title, subtitle, color) {
     </tr>`
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// Escape, then turn **x** into upright (non-italic) bold — used inside the italic
+// commentary box. Guards against any stray HTML in model output.
+function mdBoldToHtml(text) {
+  return escapeHtml(text).replace(
+    /\*\*(.+?)\*\*/g,
+    `<strong style="font-style:normal; color:${TEXT_DARK};">$1</strong>`,
+  )
+}
+
+// A vertical list of italic bullets (one <tr> per point).
+function bulletList(points) {
+  if (!points.length) return ''
+  const rows = points
+    .map(
+      (p) => `
+        <tr>
+          <td valign="top" style="width:12px; padding:0 6px 8px 0; font-size:14px; color:${TEXT_BODY}; line-height:1.5;">&bull;</td>
+          <td style="padding:0 0 8px 0; font-size:14px; font-style:italic; color:${TEXT_BODY}; line-height:1.5;">${mdBoldToHtml(p)}</td>
+        </tr>`,
+    )
+    .join('')
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`
+}
+
+// Commentary box with a colored left bar: bullet points split across two left-aligned
+// columns (first half left, remainder right).
+function calloutBox(points, color) {
+  const mid = Math.ceil(points.length / 2)
+  const left = points.slice(0, mid)
+  const right = points.slice(mid)
+  return `
+    <tr><td style="padding-bottom:14px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:${CALLOUT_BG}; border-radius:8px; border-left:4px solid ${color}; border-collapse:separate;">
+        <tr><td style="padding:14px 18px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td width="50%" valign="top" style="padding-right:18px;">${bulletList(left)}</td>
+              <td width="50%" valign="top">${bulletList(right)}</td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </td></tr>`
+}
+
 // A metric matrix: leftmost "Metric" column + the 9 MTD..M-2 value columns.
 // `rows` is [{ label, sub?, cols: { mtd, ent, ..., m2 } }].
 function metricTable(rows) {
@@ -138,8 +189,9 @@ function metricTable(rows) {
     </td></tr>`
 }
 
-function tableSection(title, subtitle, color, rows) {
-  return `${sectionTitle(title, subtitle, color)}${metricTable(rows)}`
+function tableSection(title, subtitle, color, rows, commentary) {
+  const box = commentary && commentary.length ? calloutBox(commentary, color) : ''
+  return `${sectionTitle(title, subtitle, color)}${box}${metricTable(rows)}`
 }
 
 // The lifecycle funnel: Stage (colored dot) · Accounts · Rooftops · Active · ARR,
@@ -208,7 +260,7 @@ function funnelTable(rows, total) {
  * @param {Array}   data.adoption    [{ label, cols }] rows for the Adoption table
  * @returns {string} full HTML email string
  */
-export function buildStudioHealthHtml({ funnel, funnelTotal, planCounts, images, three60, video, adoption }) {
+export function buildStudioHealthHtml({ funnel, funnelTotal, planCounts, images, three60, video, adoption, commentary = {} }) {
   const dateLabel = new Date().toLocaleDateString('en-US', {
     timeZone: 'Asia/Kolkata',
     weekday: 'long',
@@ -281,10 +333,10 @@ export function buildStudioHealthHtml({ funnel, funnelTotal, planCounts, images,
                 ${sectionTitle('Plan', `Rooftops by plan tier · share of ${fmtInt(planCounts.total)} total`, SEC.plan)}
                 ${planRow}
 
-                ${tableSection('Images', 'Delivery health across segments & trend', SEC.images, images)}
-                ${tableSection('360', 'Delivery health across segments & trend', SEC.three60, three60)}
-                ${tableSection('Video', 'Delivery health across segments & trend', SEC.video, video)}
-                ${tableSection('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption)}
+                ${tableSection('Images', 'Delivery health across segments & trend', SEC.images, images, commentary.images)}
+                ${tableSection('360', 'Delivery health across segments & trend', SEC.three60, three60, commentary.three60)}
+                ${tableSection('Video', 'Delivery health across segments & trend', SEC.video, video, commentary.video)}
+                ${tableSection('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption, commentary.adoption)}
 
                 ${ctaHtml}
 

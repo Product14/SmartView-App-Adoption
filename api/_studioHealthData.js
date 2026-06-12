@@ -6,14 +6,17 @@
 import { planCounts, byStage, stageTotals } from '../src/data/aggregations.js'
 import { operationalRooftops } from '../src/data/transform.js'
 import { pickGroup, pickMetric, pickMetricAnywhere, adoptionMatch } from '../src/data/studioMetrics.js'
+import { computeInsights, templatedCommentary } from '../src/data/studioInsights.js'
+import { phraseCommentary } from './_studioHealthLLM.js'
 
 /**
  * @param {object} sources
  * @param {Array}  sources.rooftopRows  normalizeRows() output — ALL stages (Rooftop Level tab)
  * @param {Map}    sources.healthMap    parseMatrix() output (Studio Health tab)
  * @param {Map}    sources.adoptionMap  parseMatrix() output (Studio Adoption tab)
+ * @returns {Promise<object>} payload for buildStudioHealthHtml (async — may call the LLM)
  */
-export function buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap }) {
+export async function buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap }) {
   // Funnel spans every lifecycle stage (Contracted/Onboarding/Live/Churned); all
   // other rooftop math counts only operational rooftops (Live/Onboarding).
   const funnel = byStage(rooftopRows)
@@ -55,5 +58,22 @@ export function buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap }
     { label: 'Smart Campaign', cols: pickMetric(pickGroup(adoptionMap, 'campaign'), adoptionMatch) },
   ]
 
-  return { funnel, funnelTotal, planCounts: plan, images, three60, video, adoption }
+  // Section commentary: numbers computed deterministically, then optionally phrased
+  // by GPT. Templated text is the always-available fallback (per missing section too).
+  const facts = computeInsights({ images, three60, video, adoption })
+  const templated = {
+    images: templatedCommentary(facts.images),
+    three60: templatedCommentary(facts.three60),
+    video: templatedCommentary(facts.video),
+    adoption: templatedCommentary(facts.adoption),
+  }
+  const llm = await phraseCommentary(templated)
+  const commentary = {
+    images: llm?.images || templated.images,
+    three60: llm?.three60 || templated.three60,
+    video: llm?.video || templated.video,
+    adoption: llm?.adoption || templated.adoption,
+  }
+
+  return { funnel, funnelTotal, planCounts: plan, images, three60, video, adoption, commentary }
 }

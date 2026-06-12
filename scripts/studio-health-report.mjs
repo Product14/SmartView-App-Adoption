@@ -57,7 +57,8 @@ const rooftopRows = normalizeRows(Papa.parse(rooftopCsv, { header: true, skipEmp
 const healthMap = parseMatrix(Papa.parse(healthCsv, { header: false, skipEmptyLines: false }).data)
 const adoptionMap = parseMatrix(Papa.parse(adoptionCsv, { header: false, skipEmptyLines: false }).data)
 
-const html = buildStudioHealthHtml(buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap }))
+const payload = await buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap })
+const html = buildStudioHealthHtml(payload)
 
 if (process.argv.includes('send')) {
   const result = await sendReport(html, 'Studio Health Report')
