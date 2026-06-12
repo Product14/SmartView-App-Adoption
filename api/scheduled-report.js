@@ -1,6 +1,6 @@
 // Vercel serverless function: builds and sends the daily internal SmartView
 // adoption report email. Triggered once a day by the Vercel cron defined in
-// vercel.json (07:30 UTC = 1 PM IST).
+// vercel.json (08:00 UTC = 1:30 PM IST).
 //
 // It fetches the same Google Sheet CSV the dashboard uses, runs the same
 // transform + aggregation logic, renders the Overview content (minus "Newly
