@@ -1,10 +1,15 @@
 {
   "crons": [
     { "path": "/api/studio-health-report", "schedule": "30 7 * * *" },
-    { "path": "/api/scheduled-report", "schedule": "0 8 * * *" }
+    { "path": "/api/scheduled-report", "schedule": "0 8 * * *" },
+    { "path": "/api/studio-health-board", "schedule": "0 * * * *" }
+  ],
+  "rewrites": [
+    { "source": "/studio-health-report", "destination": "/api/studio-health-board" }
   ],
   "functions": {
     "api/scheduled-report.js": { "maxDuration": 60 },
-    "api/studio-health-report.js": { "maxDuration": 60 }
+    "api/studio-health-report.js": { "maxDuration": 60 },
+    "api/studio-health-board.js": { "maxDuration": 60 }
   }
 }

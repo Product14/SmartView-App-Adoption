@@ -54,11 +54,18 @@ function devApi() {
         runHandler('./api/scheduled-report.js', 'scheduled-report'),
       )
 
-      // /api/studio-health-report — the daily studio health report.
+      // /api/studio-health-report — the daily studio health report (email).
       server.middlewares.use(
         '/api/studio-health-report',
         runHandler('./api/studio-health-report.js', 'studio-health-report'),
       )
+
+      // Studio Health Report — on-screen executive board (2×3 grid). Served at the
+      // clean /studio-health-report URL (mirrors the production vercel.json rewrite)
+      // and also at /api/studio-health-board.
+      const boardHandler = runHandler('./api/studio-health-board.js', 'studio-health-board')
+      server.middlewares.use('/api/studio-health-board', boardHandler)
+      server.middlewares.use('/studio-health-report', boardHandler)
     },
   }
 }
