@@ -4,7 +4,7 @@
 // segments tile cleanly on screen, but it borrows the EXACT design system of the
 // email template (api/_studioHealthTemplate.js): light page, eyebrow + pill header,
 // colored section bars, the MTD..M-2 metric matrix (bold MTD, lavender month
-// columns), the lifecycle funnel table, and the italic commentary callouts.
+// columns), and the lifecycle funnel table.
 //
 // Layout (designed at a fixed ~16:9 logical canvas, then scaled to fit any screen):
 //   Row 1 (HERO, no cards, divided off from the rest):
@@ -32,10 +32,8 @@ const ROW_BORDER = '#f1f1f4'
 const TEXT_DARK = '#111827'
 const TEXT_BODY = '#374151'
 const TEXT_MUTED = '#6b7280'
-const EYEBROW = '#0ea5e9'
 const PILL_BG = '#1c1c1e'
 const LAVENDER = '#f5f3ff'
-const CALLOUT_BG = '#ededf1'
 
 const SEC = {
   funnel: '#2563eb',
@@ -81,14 +79,6 @@ const COLS = [
 ]
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
-function escapeHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-// Escape, then turn **x** into upright bold (used inside italic commentary bullets).
-function mdBoldToHtml(text) {
-  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-}
-
 // Section heading: colored bar + title + optional byline. `lg` enlarges it slightly
 // for the hero row so Row 1 reads as the summary tier.
 function sectionHead(title, subtitle, color, lg) {
@@ -161,13 +151,6 @@ function planKpis(plan) {
   ).join('')
 }
 
-// ─── Commentary callout ───────────────────────────────────────────────────────
-function calloutBox(points, color) {
-  if (!points || !points.length) return ''
-  const items = points.map((p) => `<li>${mdBoldToHtml(p)}</li>`).join('')
-  return `<div class="callout" style="border-left-color:${color};"><ul>${items}</ul></div>`
-}
-
 // ─── Metric matrix (Images / 360 / Video / Adoption) ──────────────────────────
 function metricTable(rows) {
   const headers = `<tr>
@@ -190,8 +173,8 @@ function metricTable(rows) {
     </table>`
 }
 
-function metricPanel(title, subtitle, color, rows, commentary) {
-  return panel(title, subtitle, color, `${calloutBox(commentary, color)}${metricTable(rows)}`)
+function metricPanel(title, subtitle, color, rows) {
+  return panel(title, subtitle, color, metricTable(rows))
 }
 
 // ─── Main builder ─────────────────────────────────────────────────────────────
@@ -207,7 +190,6 @@ export function buildStudioHealthBoardHtml({
   three60,
   video,
   adoption,
-  commentary = {},
 }) {
   const now = new Date()
   const dateLabel = now.toLocaleDateString('en-US', {
@@ -240,10 +222,10 @@ export function buildStudioHealthBoardHtml({
 
   // Rows 2–3 — carded panels (Col 1: Images, Video · Col 2: 360, Adoption).
   const boardHtml = `
-    ${metricPanel('Images', 'Delivery health across segments & trend', SEC.images, images, commentary.images)}
-    ${metricPanel('360', 'Delivery health across segments & trend', SEC.three60, three60, commentary.three60)}
-    ${metricPanel('Video', 'Delivery health across segments & trend', SEC.video, video, commentary.video)}
-    ${metricPanel('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption, commentary.adoption)}`
+    ${metricPanel('Images', 'Delivery health across segments & trend', SEC.images, images)}
+    ${metricPanel('360', 'Delivery health across segments & trend', SEC.three60, three60)}
+    ${metricPanel('Video', 'Delivery health across segments & trend', SEC.video, video)}
+    ${metricPanel('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption)}`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -270,13 +252,11 @@ export function buildStudioHealthBoardHtml({
       display: flex; flex-direction: column; padding: 22px 26px;
     }
 
-    /* Header */
-    .topline { border-top: 2px solid ${TEXT_DARK}; padding-top: 13px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${EYEBROW}; }
-    h1 { font-size: 27px; font-weight: 800; line-height: 1.12; margin: 7px 0 0; }
-    .date { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 4px; }
-    .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
-    .pill { background: ${PILL_BG}; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 5px 13px; border-radius: 999px; }
+    /* Header (no rule line, no eyebrow, no pill) */
+    .topline { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+    h1 { font-size: 31px; font-weight: 800; line-height: 1.1; margin: 0; }
+    .date { font-size: 14.5px; color: ${TEXT_MUTED}; margin-top: 5px; }
+    .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
     .refresh-btn { display: inline-flex; align-items: center; gap: 7px; background: ${CARD_BG}; color: ${TEXT_DARK}; border: 1px solid ${BORDER}; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17,24,39,0.05); transition: background .15s, border-color .15s; }
     .refresh-btn:hover { background: #fafafa; border-color: #d1d5db; }
     .refresh-btn:disabled { cursor: default; opacity: .7; }
@@ -286,75 +266,68 @@ export function buildStudioHealthBoardHtml({
     .stamp { font-size: 11.5px; color: ${TEXT_MUTED}; }
 
     /* Section heading (shared by hero + panels) */
-    .sec-head { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 9px; }
-    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 30px; border-radius: 2px; }
-    .sec-title { font-size: 16px; font-weight: 800; line-height: 1.2; }
-    .sec-sub { font-size: 12px; color: ${TEXT_MUTED}; margin-top: 2px; }
-    .sec-head-lg .sec-bar { min-height: 38px; flex-basis: 5px; }
-    .sec-head-lg .sec-title { font-size: 18.5px; }
-    .sec-head-lg .sec-sub { font-size: 13px; font-weight: 600; color: ${TEXT_BODY}; }
+    .sec-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 13px; }
+    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 36px; border-radius: 2px; }
+    .sec-title { font-size: 18px; font-weight: 800; line-height: 1.2; }
+    .sec-sub { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 2px; }
+    .sec-head-lg .sec-bar { min-height: 44px; flex-basis: 5px; }
+    .sec-head-lg .sec-title { font-size: 22px; }
+    .sec-head-lg .sec-sub { font-size: 14.5px; font-weight: 600; color: ${TEXT_BODY}; }
 
-    /* Row 1 — HERO: no cards, sits on the page bg, divided from the rest */
-    .hero { display: grid; grid-template-columns: 1.04fr 0.96fr; gap: 20px; margin-top: 15px; align-items: stretch; }
+    /* Row 1 — HERO: no cards; columns share the board's 1fr/1fr + gap so the
+       vertical split lines up exactly with the panels below. */
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; align-items: stretch; }
     .hero-col { display: flex; flex-direction: column; }
     .hero-body { flex: 1 1 auto; display: flex; }
     .hero-body > .grid-table { align-self: flex-start; }
 
     /* The divider that strongly separates Row 1 from rows 2–3 */
-    .row-divider { position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 15px 0 13px; }
+    .row-divider { position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 20px 0 18px; }
     .row-divider::after { content: ''; position: absolute; left: 0; top: -1.5px; width: 64px; border-top: 3px solid ${TEXT_DARK}; }
 
     /* Rows 2–3 grid of carded panels */
     .board { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
 
-    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .panel-body { flex: 1 1 auto; }
+    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .panel-body { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
 
     /* KPI cards (Plan) */
-    .kpi-row { display: flex; gap: 12px; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 25px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 7px; }
-    .kpi-aside { font-size: 12.5px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 7px; }
-    .kpi-sub { font-size: 12px; color: ${TEXT_MUTED}; margin-top: 5px; }
+    .kpi-row { display: flex; gap: 14px; width: 100%; align-items: stretch; }
+    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 20px 22px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .kpi-label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 31px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 9px; }
+    .kpi-aside { font-size: 14px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 8px; }
+    .kpi-sub { font-size: 13.5px; color: ${TEXT_MUTED}; margin-top: 7px; }
 
     /* Shared table */
     .grid-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
-    .grid-table th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 8px 9px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
-    .grid-table td { padding: 7px 9px; font-size: 11.5px; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
+    .grid-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 12px 11px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
+    .grid-table td { padding: 13px 11px; font-size: 13px; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
     .grid-table tbody tr:last-child td { border-bottom: 0; }
     .grid-table tbody tr:nth-child(even) td { background: #fafafa; }
     .grid-table th.l, .grid-table td.l, .grid-table td.lead, .grid-table td.metric { text-align: left; }
     .grid-table th.r, .grid-table td.num, .grid-table td.r { text-align: right; }
     .grid-table td.strong, .grid-table td.num.strong { font-weight: 700; color: ${TEXT_DARK}; }
 
-    /* Funnel table — compact so Row 1 stays light and the KPI cards match its height */
-    .funnel th, .funnel td { padding: 8px 14px; font-size: 12.5px; }
+    /* Funnel table — roomy rows so Row 1 balances the KPI cards beside it */
+    .funnel th, .funnel td { padding: 14px 16px; font-size: 14px; }
     .funnel td.lead { font-weight: 700; color: ${TEXT_DARK}; }
-    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: middle; }
 
     /* Metric matrix specifics */
-    .matrix td.metric .m-label { display: block; font-size: 12px; font-weight: 700; color: ${TEXT_DARK}; }
-    .matrix td.metric .m-sub { display: block; font-size: 10px; color: ${TEXT_MUTED}; margin-top: 1px; }
+    .matrix td.metric .m-label { display: block; font-size: 13.5px; font-weight: 700; color: ${TEXT_DARK}; }
+    .matrix td.metric .m-sub { display: block; font-size: 11px; color: ${TEXT_MUTED}; margin-top: 1px; }
     .matrix td.c-mtd, .matrix th.c-mtd { font-weight: 700; color: ${TEXT_DARK}; }
     .matrix .c-sep { border-left: 1px solid ${BORDER}; }
     .matrix .c-lav { background: ${LAVENDER}; }
     .matrix tbody tr:nth-child(even) td.c-lav { background: #efeafe; }
 
-    /* Commentary callout */
-    .callout { background: ${CALLOUT_BG}; border-left: 4px solid ${TEXT_MUTED}; border-radius: 8px; padding: 9px 13px; margin-bottom: 10px; }
-    .callout ul { margin: 0; padding: 0; list-style: none; column-count: 2; column-gap: 22px; }
-    .callout li { position: relative; padding-left: 14px; font-size: 11.5px; font-style: italic; color: ${TEXT_BODY}; line-height: 1.42; margin-bottom: 4px; break-inside: avoid; }
-    .callout li:last-child { margin-bottom: 0; }
-    .callout li::before { content: '•'; position: absolute; left: 2px; color: ${TEXT_BODY}; font-style: normal; }
-    .callout strong { font-style: normal; font-weight: 700; color: ${TEXT_DARK}; }
-
     .empty { text-align: center; color: ${TEXT_MUTED}; padding: 14px; }
 
     /* Footer */
-    .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 13px; }
-    .foot-note { font-size: 11.5px; color: ${TEXT_MUTED}; }
-    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; padding: 8px 22px; border-radius: 8px; letter-spacing: 0.02em; }
+    .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
+    .foot-note { font-size: 13px; color: ${TEXT_MUTED}; }
+    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 26px; border-radius: 8px; letter-spacing: 0.02em; }
 
     /* ── Narrow / portrait fallback (phones): drop the fit canvas, scroll normally ── */
     @media (max-width: 820px) {
@@ -372,12 +345,10 @@ export function buildStudioHealthBoardHtml({
 
       <div class="topline">
         <div>
-          <div class="eyebrow">Studio · Daily</div>
           <h1>Studio Health Report</h1>
           <div class="date">${dateLabel}</div>
         </div>
         <div class="head-right">
-          <span class="pill">STUDIO</span>
           <button id="refresh" class="refresh-btn" type="button" data-label="Refresh" title="Re-fetch live numbers from the source sheet">
             <span class="rf-icon">&#8635;</span><span class="rf-text">Refresh</span>
           </button>
