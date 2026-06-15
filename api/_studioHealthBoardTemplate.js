@@ -1,4 +1,4 @@
-// ─── Studio Health Report — Executive Board (on-screen 2×3 grid) ──────────────
+// ─── Studio Health Report — Executive Board (single-screen, fit-to-display) ───
 // A browser-viewable, single-glance executive layout of the same Studio Health
 // Report data. NOT an email — it uses a real <style> block + CSS grid so the six
 // segments tile cleanly on screen, but it borrows the EXACT design system of the
@@ -6,17 +6,21 @@
 // colored section bars, the MTD..M-2 metric matrix (bold MTD, lavender month
 // columns), the lifecycle funnel table, and the italic commentary callouts.
 //
-// Layout:
+// Layout (designed at a fixed ~16:9 logical canvas, then scaled to fit any screen):
 //   Row 1 (HERO, no cards, divided off from the rest):
 //     Col 1 — Funnel — Contracted → Live  (heading + bare table, no byline, no card)
 //     Col 2 — Plan                        (heading + 3 KPI cards, no card)
 //   ── divider ──
-//   Rows 2–3 (carded panels):
-//     Images · Video   |   360 · Adoption
+//   Rows 2–3 (carded panels):  Images · Video  |  360 · Adoption
 //
-// The numbers are live: the handler re-fetches the three sheet tabs on each
-// request. The "Refresh" button forces a no-cache re-fetch; an hourly Vercel cron
-// keeps the edge cache warm. All figures come straight from buildStudioHealthPayload.
+// FIT-TO-SCREEN: the whole canvas (#fitwrap) is scaled with a CSS transform to fill
+// the viewport in both dimensions — no scroll, gaps/proportions preserved exactly,
+// scaling up on large LED/studio displays and down on laptops. Falls back to a normal
+// scrollable single column on narrow/portrait screens (phones).
+//
+// The numbers are live: the handler re-fetches the three sheet tabs on each request.
+// The "Refresh" button forces a no-cache re-fetch; an hourly Vercel cron keeps the
+// edge cache warm. All figures come straight from buildStudioHealthPayload.
 
 import { fmtInt, pct, fmtMoneyCompact } from '../src/utils/format.js'
 
@@ -250,66 +254,74 @@ export function buildStudioHealthBoardHtml({
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
-      margin: 0; background: ${PAGE_BG}; color: ${TEXT_DARK};
+      margin: 0; background: ${PAGE_BG}; color: ${TEXT_DARK}; overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 1480px; margin: 0 auto; padding: 28px 28px 48px; }
+
+    /* Full-viewport stage; the canvas is centered and scaled to fit inside it. */
+    .stage { position: fixed; inset: 0; overflow: hidden; background: ${PAGE_BG}; }
+    /* Fixed ~16:9 logical canvas. The fit script scales it to the viewport. */
+    .wrap {
+      position: absolute; top: 50%; left: 50%; width: 1640px;
+      transform-origin: center center; transform: translate(-50%, -50%);
+      display: flex; flex-direction: column; padding: 22px 26px;
+    }
 
     /* Header */
-    .topline { border-top: 2px solid ${TEXT_DARK}; padding-top: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${EYEBROW}; }
-    h1 { font-size: 32px; font-weight: 800; line-height: 1.15; margin: 10px 0 0; }
-    .date { font-size: 15px; color: ${TEXT_MUTED}; margin-top: 6px; }
-    .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-    .pill { background: ${PILL_BG}; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 14px; border-radius: 999px; }
-    .refresh-btn { display: inline-flex; align-items: center; gap: 8px; background: ${CARD_BG}; color: ${TEXT_DARK}; border: 1px solid ${BORDER}; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17,24,39,0.05); transition: background .15s, border-color .15s; }
+    .topline { border-top: 2px solid ${TEXT_DARK}; padding-top: 13px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${EYEBROW}; }
+    h1 { font-size: 27px; font-weight: 800; line-height: 1.12; margin: 7px 0 0; }
+    .date { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 4px; }
+    .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+    .pill { background: ${PILL_BG}; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 5px 13px; border-radius: 999px; }
+    .refresh-btn { display: inline-flex; align-items: center; gap: 7px; background: ${CARD_BG}; color: ${TEXT_DARK}; border: 1px solid ${BORDER}; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17,24,39,0.05); transition: background .15s, border-color .15s; }
     .refresh-btn:hover { background: #fafafa; border-color: #d1d5db; }
     .refresh-btn:disabled { cursor: default; opacity: .7; }
-    .rf-icon { font-size: 15px; line-height: 1; display: inline-block; }
+    .rf-icon { font-size: 14px; line-height: 1; display: inline-block; }
     .refresh-btn.spin .rf-icon { animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .stamp { font-size: 12px; color: ${TEXT_MUTED}; }
+    .stamp { font-size: 11.5px; color: ${TEXT_MUTED}; }
 
     /* Section heading (shared by hero + panels) */
-    .sec-head { display: flex; gap: 13px; align-items: flex-start; margin-bottom: 14px; }
-    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 38px; border-radius: 2px; }
-    .sec-title { font-size: 19px; font-weight: 800; line-height: 1.2; }
-    .sec-sub { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 3px; }
-    .sec-head-lg .sec-bar { min-height: 44px; flex-basis: 5px; }
-    .sec-head-lg .sec-title { font-size: 22px; }
-    .sec-head-lg .sec-sub { font-size: 14px; font-weight: 600; color: ${TEXT_BODY}; }
+    .sec-head { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 9px; }
+    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 30px; border-radius: 2px; }
+    .sec-title { font-size: 16px; font-weight: 800; line-height: 1.2; }
+    .sec-sub { font-size: 12px; color: ${TEXT_MUTED}; margin-top: 2px; }
+    .sec-head-lg .sec-bar { min-height: 38px; flex-basis: 5px; }
+    .sec-head-lg .sec-title { font-size: 18.5px; }
+    .sec-head-lg .sec-sub { font-size: 13px; font-weight: 600; color: ${TEXT_BODY}; }
 
     /* Row 1 — HERO: no cards, sits on the page bg, divided from the rest */
-    .hero { display: grid; grid-template-columns: 1.04fr 0.96fr; gap: 26px; margin-top: 22px; align-items: stretch; }
+    .hero { display: grid; grid-template-columns: 1.04fr 0.96fr; gap: 20px; margin-top: 15px; align-items: stretch; }
     .hero-col { display: flex; flex-direction: column; }
     .hero-body { flex: 1 1 auto; display: flex; }
     .hero-body > .grid-table { align-self: flex-start; }
 
     /* The divider that strongly separates Row 1 from rows 2–3 */
-    .row-divider { position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 30px 0 26px; }
+    .row-divider { position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 15px 0 13px; }
     .row-divider::after { content: ''; position: absolute; left: 0; top: -1.5px; width: 64px; border-top: 3px solid ${TEXT_DARK}; }
 
     /* Rows 2–3 grid of carded panels */
-    .board { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: stretch; }
-    @media (max-width: 1080px) { .hero, .board { grid-template-columns: 1fr; } }
+    .board { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
 
-    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 14px; padding: 20px 22px 22px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
     .panel-body { flex: 1 1 auto; }
 
     /* KPI cards (Plan) */
-    .kpi-row { display: flex; gap: 14px; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .kpi-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-    .kpi-value { font-size: 32px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 10px; }
-    .kpi-aside { font-size: 14px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 8px; }
-    .kpi-sub { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 7px; }
+    .kpi-row { display: flex; gap: 12px; width: 100%; align-items: stretch; }
+    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 25px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 7px; }
+    .kpi-aside { font-size: 12.5px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 7px; }
+    .kpi-sub { font-size: 12px; color: ${TEXT_MUTED}; margin-top: 5px; }
 
     /* Shared table */
-    .grid-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 12px; overflow: hidden; background: ${CARD_BG}; }
-    .grid-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: ${TEXT_MUTED}; padding: 11px 10px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
-    .grid-table td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
+    .grid-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
+    .grid-table th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 8px 9px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
+    .grid-table td { padding: 7px 9px; font-size: 11.5px; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
     .grid-table tbody tr:last-child td { border-bottom: 0; }
     .grid-table tbody tr:nth-child(even) td { background: #fafafa; }
     .grid-table th.l, .grid-table td.l, .grid-table td.lead, .grid-table td.metric { text-align: left; }
@@ -317,68 +329,99 @@ export function buildStudioHealthBoardHtml({
     .grid-table td.strong, .grid-table td.num.strong { font-weight: 700; color: ${TEXT_DARK}; }
 
     /* Funnel table — compact so Row 1 stays light and the KPI cards match its height */
-    .funnel th, .funnel td { padding: 11px 16px; font-size: 14px; }
+    .funnel th, .funnel td { padding: 8px 14px; font-size: 12.5px; }
     .funnel td.lead { font-weight: 700; color: ${TEXT_DARK}; }
-    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: middle; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
 
     /* Metric matrix specifics */
-    .matrix td.metric .m-label { display: block; font-size: 13px; font-weight: 700; color: ${TEXT_DARK}; }
-    .matrix td.metric .m-sub { display: block; font-size: 11px; color: ${TEXT_MUTED}; margin-top: 1px; }
+    .matrix td.metric .m-label { display: block; font-size: 12px; font-weight: 700; color: ${TEXT_DARK}; }
+    .matrix td.metric .m-sub { display: block; font-size: 10px; color: ${TEXT_MUTED}; margin-top: 1px; }
     .matrix td.c-mtd, .matrix th.c-mtd { font-weight: 700; color: ${TEXT_DARK}; }
     .matrix .c-sep { border-left: 1px solid ${BORDER}; }
     .matrix .c-lav { background: ${LAVENDER}; }
     .matrix tbody tr:nth-child(even) td.c-lav { background: #efeafe; }
 
     /* Commentary callout */
-    .callout { background: ${CALLOUT_BG}; border-left: 4px solid ${TEXT_MUTED}; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
-    .callout ul { margin: 0; padding: 0; list-style: none; }
-    .callout li { position: relative; padding-left: 16px; font-size: 13.5px; font-style: italic; color: ${TEXT_BODY}; line-height: 1.5; margin-bottom: 7px; }
+    .callout { background: ${CALLOUT_BG}; border-left: 4px solid ${TEXT_MUTED}; border-radius: 8px; padding: 9px 13px; margin-bottom: 10px; }
+    .callout ul { margin: 0; padding: 0; list-style: none; column-count: 2; column-gap: 22px; }
+    .callout li { position: relative; padding-left: 14px; font-size: 11.5px; font-style: italic; color: ${TEXT_BODY}; line-height: 1.42; margin-bottom: 4px; break-inside: avoid; }
     .callout li:last-child { margin-bottom: 0; }
     .callout li::before { content: '•'; position: absolute; left: 2px; color: ${TEXT_BODY}; font-style: normal; }
     .callout strong { font-style: normal; font-weight: 700; color: ${TEXT_DARK}; }
 
-    .empty { text-align: center; color: ${TEXT_MUTED}; padding: 16px; }
+    .empty { text-align: center; color: ${TEXT_MUTED}; padding: 14px; }
 
     /* Footer */
-    .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; flex-wrap: wrap; }
-    .foot-note { font-size: 12.5px; color: ${TEXT_MUTED}; }
-    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 11px 28px; border-radius: 8px; letter-spacing: 0.02em; }
+    .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 13px; }
+    .foot-note { font-size: 11.5px; color: ${TEXT_MUTED}; }
+    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; padding: 8px 22px; border-radius: 8px; letter-spacing: 0.02em; }
+
+    /* ── Narrow / portrait fallback (phones): drop the fit canvas, scroll normally ── */
+    @media (max-width: 820px) {
+      body { overflow: auto; }
+      .stage { position: static; overflow: visible; }
+      .wrap { position: static; transform: none !important; top: auto; left: auto; width: 100%; max-width: 760px; margin: 0 auto; }
+      .hero, .board { grid-template-columns: 1fr; }
+      .kpi-row { flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="stage">
+    <div id="fitwrap" class="wrap">
 
-    <div class="topline">
-      <div>
-        <div class="eyebrow">Studio · Daily</div>
-        <h1>Studio Health Report</h1>
-        <div class="date">${dateLabel}</div>
+      <div class="topline">
+        <div>
+          <div class="eyebrow">Studio · Daily</div>
+          <h1>Studio Health Report</h1>
+          <div class="date">${dateLabel}</div>
+        </div>
+        <div class="head-right">
+          <span class="pill">STUDIO</span>
+          <button id="refresh" class="refresh-btn" type="button" data-label="Refresh" title="Re-fetch live numbers from the source sheet">
+            <span class="rf-icon">&#8635;</span><span class="rf-text">Refresh</span>
+          </button>
+          <span id="stamp" class="stamp">Updated ${stamp} IST</span>
+        </div>
       </div>
-      <div class="head-right">
-        <span class="pill">STUDIO</span>
-        <button id="refresh" class="refresh-btn" type="button" data-label="Refresh" title="Re-fetch live numbers from the source sheet">
-          <span class="rf-icon">&#8635;</span><span class="rf-text">Refresh</span>
-        </button>
-        <span id="stamp" class="stamp">Updated ${stamp} IST</span>
+
+      <!-- Row 1 (hero) -->
+      <div id="hero" class="hero">${heroHtml}</div>
+
+      <hr class="row-divider" />
+
+      <!-- Rows 2–3 (panels) -->
+      <div id="board" class="board">${boardHtml}</div>
+
+      <div class="foot">
+        <span class="foot-note">Live from the source sheet (Rooftop · Studio Health · Adoption tabs) · auto-refreshes hourly</span>
+        ${dashboardUrl ? `<a class="cta" href="${dashboardUrl}" target="_blank" rel="noopener noreferrer">View Dashboard</a>` : ''}
       </div>
+
     </div>
-
-    <!-- Row 1 (hero) -->
-    <div id="hero" class="hero">${heroHtml}</div>
-
-    <hr class="row-divider" />
-
-    <!-- Rows 2–3 (panels) -->
-    <div id="board" class="board">${boardHtml}</div>
-
-    <div class="foot">
-      <span class="foot-note">Live from the source sheet (Rooftop · Studio Health · Adoption tabs) · auto-refreshes hourly</span>
-      ${dashboardUrl ? `<a class="cta" href="${dashboardUrl}" target="_blank" rel="noopener noreferrer">View Dashboard</a>` : ''}
-    </div>
-
   </div>
 
   <script>
+    // ── Scale-to-fit: size the fixed canvas to fill the viewport, no scroll ──
+    (function () {
+      var TARGET = document.getElementById('fitwrap');
+      function fit() {
+        if (!TARGET) return;
+        // Narrow/portrait → CSS fallback handles it; clear any inline transform.
+        if (window.matchMedia('(max-width: 820px)').matches) { TARGET.style.transform = ''; return; }
+        var w = TARGET.offsetWidth, h = TARGET.offsetHeight;   // layout size (ignores transform)
+        if (!w || !h) return;
+        var s = Math.min(window.innerWidth / w, window.innerHeight / h);
+        TARGET.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+      }
+      window.__fitBoard = fit;
+      window.addEventListener('resize', fit);
+      window.addEventListener('load', fit);
+      if (document.readyState !== 'loading') fit();
+      else document.addEventListener('DOMContentLoaded', fit);
+    })();
+
+    // ── Refresh: live re-fetch (no cache), swap the dynamic regions, refit ──
     (function () {
       var btn = document.getElementById('refresh');
       if (!btn) return;
@@ -405,6 +448,7 @@ export function buildStudioHealthBoardHtml({
             btn.disabled = false;
             btn.classList.remove('spin');
             if (txt) txt.textContent = btn.getAttribute('data-label') || 'Refresh';
+            if (window.__fitBoard) window.__fitBoard();
           });
       });
     })();
