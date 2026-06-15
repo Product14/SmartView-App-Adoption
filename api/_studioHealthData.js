@@ -3,8 +3,8 @@
 // expects. Kept here (shared by the endpoint and the local tester) so the
 // metric → matcher wiring lives in exactly one place.
 
-import { planCounts, byStage, stageTotals } from '../src/data/aggregations.js'
-import { operationalRooftops } from '../src/data/transform.js'
+import { planCounts, lifecycleFunnel } from '../src/data/aggregations.js'
+import { liveRooftops } from '../src/data/transform.js'
 import { pickGroup, pickMetric, pickMetricAnywhere, adoptionMatch } from '../src/data/studioMetrics.js'
 import { computeInsights, templatedCommentary } from '../src/data/studioInsights.js'
 import { phraseCommentary } from './_studioHealthLLM.js'
@@ -17,11 +17,10 @@ import { phraseCommentary } from './_studioHealthLLM.js'
  * @returns {Promise<object>} payload for buildStudioHealthHtml (async — may call the LLM)
  */
 export async function buildStudioHealthPayload({ rooftopRows, healthMap, adoptionMap }) {
-  // Funnel spans every lifecycle stage (Contracted/Onboarding/Live/Churned); all
+  // Funnel is a cumulative lifecycle view (Contracted ⊇ PWS/Onboarding/Live); all
   // other rooftop math counts only operational rooftops (Live/Onboarding).
-  const funnel = byStage(rooftopRows)
-  const funnelTotal = stageTotals(rooftopRows)
-  const plan = planCounts(operationalRooftops(rooftopRows))
+  const funnel = lifecycleFunnel(rooftopRows)
+  const plan = planCounts(liveRooftops(rooftopRows))
 
   const imagesG = pickGroup(healthMap, 'image')
   const three60G = pickGroup(healthMap, '360')
@@ -75,5 +74,5 @@ export async function buildStudioHealthPayload({ rooftopRows, healthMap, adoptio
     adoption: llm?.adoption || templated.adoption,
   }
 
-  return { funnel, funnelTotal, planCounts: plan, images, three60, video, adoption, commentary }
+  return { funnel, planCounts: plan, images, three60, video, adoption, commentary }
 }

@@ -13,6 +13,12 @@ export function operationalRooftops(rows) {
   return rows.filter((r) => OPERATIONAL_STAGES.includes((r.stage || '').toLowerCase()))
 }
 
+// Live rooftops only. The Studio Health Report's Plan section counts plan tiers
+// across Live teams (a subset of operational).
+export function liveRooftops(rows) {
+  return rows.filter((r) => (r.stage || '').toLowerCase().includes('live'))
+}
+
 // Derived "Rooftop Type" — Franchise/Independent (team_sub_type) crossed with
 // Group/Individual (team_type). Mirrors the source SQL CASE exactly: anything
 // not matching the four dealer combinations (incl. blank type) falls to Others.

@@ -63,18 +63,30 @@ export function stageRank(stage) {
   return i === -1 ? STAGE_ORDER.length : i
 }
 
-// Group by the per-rooftop lifecycle stage for the Studio Health Report funnel.
-// Accounts = distinct enterprise_id, Rooftops = distinct team_id, Active = distinct
-// active team_id (image in last 30 days), Arr = sum of contracted_arr. Operates on the
-// FULL row set (every stage). An enterprise can have rooftops in more than one stage, so
-// the distinct Total accounts may be lower than the sum of the per-stage account counts.
-export function byStage(rows) {
-  const out = [...groupBy(rows, (r) => r.stage).entries()].map(([stage, rs]) => {
+// Studio Health Report lifecycle funnel (cumulative top-of-funnel view). Rows:
+//   Contracted — every rooftop that has been contracted (Contracted + Onboarding + Live)
+//   PWS        — rooftops still in the Contracted stage
+//   Onboarding — rooftops in the Onboarding stage
+//   Live       — rooftops in the Live stage
+// Churned rooftops are excluded; there is no Total row. Accounts = distinct enterprise_id,
+// Rooftops = distinct team_id, Active = distinct active team_id, Arr = sum of contracted_arr,
+// each computed distinctly within the row's stage set (cumulative rows are not naive sums).
+const FUNNEL_ROWS = [
+  { stage: 'Contracted', match: ['contracted', 'onboarding', 'live'] },
+  { stage: 'PWS', match: ['contracted'] },
+  { stage: 'Onboarding', match: ['onboarding'] },
+  { stage: 'Live', match: ['live'] },
+]
+
+export function lifecycleFunnel(rows) {
+  return FUNNEL_ROWS.map(({ stage, match }) => {
     const accounts = new Set()
     const rooftops = new Set()
     const active = new Set()
     let arr = 0
-    for (const r of rs) {
+    for (const r of rows) {
+      const s = (r.stage || '').toLowerCase()
+      if (!match.some((m) => s.includes(m))) continue
       accounts.add(r.enterpriseId)
       rooftops.add(r.teamId)
       if (r.active) active.add(r.teamId)
@@ -82,25 +94,6 @@ export function byStage(rows) {
     }
     return { stage, accounts: accounts.size, rooftops: rooftops.size, active: active.size, arr }
   })
-  out.sort((a, b) => stageRank(a.stage) - stageRank(b.stage))
-  return out
-}
-
-// Funnel total row: distinct accounts/rooftops/active across ALL stages + total ARR.
-// Accounts is distinct enterprise_id over the whole set (an enterprise can span
-// stages), so it may be less than the sum of the per-stage account counts.
-export function stageTotals(rows) {
-  const accounts = new Set()
-  const rooftops = new Set()
-  const active = new Set()
-  let arr = 0
-  for (const r of rows) {
-    accounts.add(r.enterpriseId)
-    rooftops.add(r.teamId)
-    if (r.active) active.add(r.teamId)
-    arr += r.arr
-  }
-  return { accounts: accounts.size, rooftops: rooftops.size, active: active.size, arr }
 }
 
 export function computeKpis(rows) {
@@ -162,13 +155,23 @@ export function planCounts(rows) {
   let lite = 0
   let pro = 0
   let others = 0
+  let liteArr = 0
+  let proArr = 0
+  let othersArr = 0
   for (const r of rows) {
     const tier = classifyPlan(r.plan)
-    if (tier === 'Studio - Lite') lite++
-    else if (tier === 'Studio - Pro') pro++
-    else others++
+    if (tier === 'Studio - Lite') {
+      lite++
+      liteArr += r.arr
+    } else if (tier === 'Studio - Pro') {
+      pro++
+      proArr += r.arr
+    } else {
+      others++
+      othersArr += r.arr
+    }
   }
-  return { lite, pro, others, total: rows.length }
+  return { lite, pro, others, total: rows.length, liteArr, proArr, othersArr }
 }
 
 const pad2 = (n) => String(n).padStart(2, '0')

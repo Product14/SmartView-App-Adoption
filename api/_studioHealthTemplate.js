@@ -36,6 +36,7 @@ const SEC = {
 // Substring match so label variants (e.g. "In Onboarding") still resolve a color.
 const STAGE_DOT = {
   contracted: '#0ea5e9',
+  pws: '#7c3aed',
   onboarding: '#d97706',
   live: '#16a34a',
   churned: '#dc2626',
@@ -64,12 +65,12 @@ const COLS = [
 
 // ─── Partials ───────────────────────────────────────────────────────────────
 
-function kpiCard(label, value, sub, labelColor, width) {
+function kpiCard(label, value, sub, labelColor, width, valueAside) {
   return `
     <td width="${width}" valign="top" style="padding:6px;">
       <div style="background:${CARD_BG}; border:1px solid ${BORDER}; border-radius:12px; padding:18px 20px;">
         <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:${labelColor};">${label}</div>
-        <div style="font-size:34px; font-weight:800; color:${TEXT_DARK}; line-height:1.1; margin-top:10px;">${value}</div>
+        <div style="font-size:34px; font-weight:800; color:${TEXT_DARK}; line-height:1.1; margin-top:10px;">${value}${valueAside ? `<span style="font-size:15px; font-weight:700; color:${TEXT_MUTED}; margin-left:9px;">${valueAside}</span>` : ''}</div>
         ${sub ? `<div style="font-size:13px; color:${TEXT_MUTED}; margin-top:7px;">${sub}</div>` : ''}
       </div>
     </td>`
@@ -194,9 +195,9 @@ function tableSection(title, subtitle, color, rows, commentary) {
   return `${sectionTitle(title, subtitle, color)}${box}${metricTable(rows)}`
 }
 
-// The lifecycle funnel: Stage (colored dot) · Accounts · Rooftops · Active · ARR,
-// with a bold Total footer. `rows` is byStage() output; `total` is stageTotals().
-function funnelTable(rows, total) {
+// The lifecycle funnel: Stage (colored dot) · Accounts · Rooftops · Active · ARR.
+// `rows` is lifecycleFunnel() output (Contracted ⊇ PWS/Onboarding/Live, no Total row).
+function funnelTable(rows) {
   const thBase = `padding:12px 16px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:${TEXT_MUTED}; white-space:nowrap; border-bottom:1px solid ${BORDER};`
   const headers = `<tr>
     <th style="${thBase} text-align:left;">Stage</th>
@@ -225,24 +226,12 @@ function funnelTable(rows, total) {
 
   const empty = `<tr><td colspan="5" style="padding:16px; text-align:center; color:${TEXT_MUTED}; font-size:13px;">No data</td></tr>`
 
-  const totalBase = `padding:15px 16px; border-top:2px solid ${BORDER}; font-size:15px; font-weight:800; color:${TEXT_DARK}; white-space:nowrap;`
-  const totalRow = total
-    ? `<tr style="background:${CARD_BG};">
-        <td style="${totalBase} text-align:left;">Total</td>
-        <td style="${totalBase} text-align:right;">${fmtInt(total.accounts)}</td>
-        <td style="${totalBase} text-align:right;">${fmtInt(total.rooftops)}</td>
-        <td style="${totalBase} text-align:right;">${fmtInt(total.active)}</td>
-        <td style="${totalBase} text-align:right;">${fmtMoneyCompact(total.arr)}</td>
-      </tr>`
-    : ''
-
   return `
     <tr><td>
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:${CARD_BG}; border:1px solid ${BORDER}; border-radius:12px; overflow:hidden; border-collapse:separate; border-spacing:0;">
         ${headers}
         ${body || empty}
-        ${rows.length ? totalRow : ''}
       </table>
     </td></tr>`
 }
@@ -251,16 +240,15 @@ function funnelTable(rows, total) {
 
 /**
  * @param {object}  data
- * @param {Array}   data.funnel      byStage() result [{ stage, accounts, rooftops, active, arr }]
- * @param {object}  data.funnelTotal stageTotals() result for the funnel Total row
- * @param {object}  data.planCounts  { lite, pro, others, total }
+ * @param {Array}   data.funnel      lifecycleFunnel() result [{ stage, accounts, rooftops, active, arr }]
+ * @param {object}  data.planCounts  { lite, pro, others, total, liteArr, proArr, othersArr }
  * @param {Array}   data.images      [{ label, sub?, cols }] rows for the Images table
  * @param {Array}   data.three60     [{ label, sub?, cols }] rows for the 360 table
  * @param {Array}   data.video       [{ label, sub?, cols }] rows for the Video table
  * @param {Array}   data.adoption    [{ label, cols }] rows for the Adoption table
  * @returns {string} full HTML email string
  */
-export function buildStudioHealthHtml({ funnel, funnelTotal, planCounts, images, three60, video, adoption, commentary = {} }) {
+export function buildStudioHealthHtml({ funnel, planCounts, images, three60, video, adoption, commentary = {} }) {
   const dateLabel = new Date().toLocaleDateString('en-US', {
     timeZone: 'Asia/Kolkata',
     weekday: 'long',
@@ -270,9 +258,9 @@ export function buildStudioHealthHtml({ funnel, funnelTotal, planCounts, images,
   })
 
   const planRow = kpiRow([
-    kpiCard('Studio-Lite', fmtInt(planCounts.lite), `${pct(planCounts.lite, planCounts.total)} of total`, '#0284c7', '33.33%'),
-    kpiCard('Studio-Pro', fmtInt(planCounts.pro), `${pct(planCounts.pro, planCounts.total)} of total`, '#16a34a', '33.34%'),
-    kpiCard('Studio-Others', fmtInt(planCounts.others), `${pct(planCounts.others, planCounts.total)} of total`, '#64748b', '33.33%'),
+    kpiCard('Studio-Lite', fmtInt(planCounts.lite), `${pct(planCounts.lite, planCounts.total)} of Live Rooftops`, '#0284c7', '33.33%', `${fmtMoneyCompact(planCounts.liteArr)} ARR`),
+    kpiCard('Studio-Pro', fmtInt(planCounts.pro), `${pct(planCounts.pro, planCounts.total)} of Live Rooftops`, '#16a34a', '33.34%', `${fmtMoneyCompact(planCounts.proArr)} ARR`),
+    kpiCard('Studio-Others', fmtInt(planCounts.others), `${pct(planCounts.others, planCounts.total)} of Live Rooftops`, '#64748b', '33.33%', `${fmtMoneyCompact(planCounts.othersArr)} ARR`),
   ])
 
   const dashboardUrl =(process.env.STUDIO_HEALTH_DASHBOARD_URL || 'https://analytics.spyne.ai/satudio').replace(/\/$/, '')
@@ -328,9 +316,9 @@ export function buildStudioHealthHtml({ funnel, funnelTotal, planCounts, images,
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
 
                 ${sectionTitle('Funnel — Contracted → Live', 'Accounts · Rooftops · ARR per lifecycle stage', SEC.funnel)}
-                ${funnelTable(funnel, funnelTotal)}
+                ${funnelTable(funnel)}
 
-                ${sectionTitle('Plan', `Rooftops by plan tier · share of ${fmtInt(planCounts.total)} total`, SEC.plan)}
+                ${sectionTitle('Plan', `Rooftops by plan tier · share of <strong style="color:${TEXT_DARK}; font-weight:700;">${fmtInt(planCounts.total)} Live rooftops</strong>`, SEC.plan)}
                 ${planRow}
 
                 ${tableSection('Images', 'Delivery health across segments & trend', SEC.images, images, commentary.images)}
