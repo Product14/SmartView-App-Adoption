@@ -1,7 +1,6 @@
 {
   "crons": [
-    { "path": "/api/studio-health-report", "schedule": "30 7 * * *" },
-    { "path": "/api/scheduled-report", "schedule": "0 8 * * *" }
+    { "path": "/api/studio-health-report", "schedule": "30 7 * * *" }
   ],
   "functions": {
     "api/scheduled-report.js": { "maxDuration": 60 },
