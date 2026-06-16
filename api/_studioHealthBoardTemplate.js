@@ -224,7 +224,7 @@ export function buildStudioHealthBoardHtml({
     ${metricPanel('Images', 'Delivery health across segments & trend', SEC.images, images)}
     ${panel('Funnel — Contracted → Live', '', SEC.funnel, funnelTable(funnel))}
     ${metricPanel('360', 'Delivery health across segments & trend', SEC.three60, three60)}
-    ${metricPanel('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption)}
+    ${metricPanel('Adoption', '', SEC.adoption, adoption)}
     ${metricPanel('Video', 'Delivery health across segments & trend', SEC.video, video)}`
 
   return `<!DOCTYPE html>
@@ -283,6 +283,7 @@ export function buildStudioHealthBoardHtml({
     /* Plan cell: bare (no card) heading + a row of 3 separate KPI boxes filling the cell */
     .plan-cell { display: flex; flex-direction: column; min-height: 0; }
     .plan-cell .kpi-row { flex: 1 1 auto; min-height: 0; }
+    .plan-cell .sec-sub { font-weight: 700; color: ${TEXT_DARK}; }
 
     /* KPI boxes (Plan) — 3 separate cards */
     .kpi-row { display: flex; gap: 6px; width: 100%; align-items: stretch; }
