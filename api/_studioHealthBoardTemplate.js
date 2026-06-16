@@ -243,20 +243,16 @@ export function buildStudioHealthBoardHtml({
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Full-viewport stage; the canvas is centered and scaled to fit inside it. */
-    .stage { position: fixed; inset: 0; overflow: hidden; background: ${PAGE_BG}; }
-    /* Fixed ~16:9 logical canvas. The fit script scales it to the viewport. */
-    .wrap {
-      position: absolute; top: 50%; left: 50%; width: 1640px;
-      transform-origin: center center; transform: translate(-50%, -50%);
-      display: flex; flex-direction: column; padding: 22px 26px;
-    }
+    /* Fluid full-viewport canvas: fills the whole screen WIDTH (thin side margin)
+       and HEIGHT (no scroll). Pure CSS flexbox — no JS transform — so it is robust
+       on TV / set-top browsers. Sections flex to fill; tables stretch to fill. */
+    .wrap { height: 100vh; width: 100%; padding: 16px 18px; display: flex; flex-direction: column; }
 
-    /* Header (no rule line, no eyebrow, no pill) */
-    .topline { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-    h1 { font-size: 31px; font-weight: 800; line-height: 1.1; margin: 0; }
-    .date { font-size: 14.5px; color: ${TEXT_MUTED}; margin-top: 5px; }
-    .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    /* Header */
+    .topline { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+    h1 { font-size: 30px; font-weight: 800; line-height: 1.1; margin: 0; }
+    .date { font-size: 14px; color: ${TEXT_MUTED}; margin-top: 4px; }
+    .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
     .refresh-btn { display: inline-flex; align-items: center; gap: 7px; background: ${CARD_BG}; color: ${TEXT_DARK}; border: 1px solid ${BORDER}; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17,24,39,0.05); transition: background .15s, border-color .15s; }
     .refresh-btn:hover { background: #fafafa; border-color: #d1d5db; }
     .refresh-btn:disabled { cursor: default; opacity: .7; }
@@ -266,56 +262,59 @@ export function buildStudioHealthBoardHtml({
     .stamp { font-size: 11.5px; color: ${TEXT_MUTED}; }
 
     /* Section heading (shared by hero + panels) */
-    .sec-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 13px; }
-    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 36px; border-radius: 2px; }
-    .sec-title { font-size: 18px; font-weight: 800; line-height: 1.2; }
-    .sec-sub { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 2px; }
-    .sec-head-lg .sec-bar { min-height: 44px; flex-basis: 5px; }
-    .sec-head-lg .sec-title { font-size: 22px; }
-    .sec-head-lg .sec-sub { font-size: 14.5px; font-weight: 600; color: ${TEXT_BODY}; }
+    .sec-head { flex: 0 0 auto; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 34px; border-radius: 2px; }
+    .sec-title { font-size: 17px; font-weight: 800; line-height: 1.2; }
+    .sec-sub { font-size: 12.5px; color: ${TEXT_MUTED}; margin-top: 2px; }
+    .sec-head-lg .sec-bar { min-height: 40px; flex-basis: 5px; }
+    .sec-head-lg .sec-title { font-size: 20px; }
+    .sec-head-lg .sec-sub { font-size: 13.5px; font-weight: 600; color: ${TEXT_BODY}; }
 
-    /* Row 1 — HERO: no cards; columns share the board's 1fr/1fr + gap so the
+    /* Row 1 — HERO: grows to fill; columns share the board's 1fr/1fr + gap so the
        vertical split lines up exactly with the panels below. */
-    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; align-items: stretch; }
-    .hero-col { display: flex; flex-direction: column; }
-    .hero-body { flex: 1 1 auto; display: flex; }
-    .hero-body > .grid-table { align-self: flex-start; }
+    .hero { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .hero-col { display: flex; flex-direction: column; min-height: 0; }
+    .hero-body { flex: 1 1 auto; min-height: 0; }
+    .hero-body > .grid-table { height: 100%; }
+    .hero-body > .kpi-row { height: 100%; }
 
     /* The divider that strongly separates Row 1 from rows 2–3 */
-    .row-divider { position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 20px 0 18px; }
+    .row-divider { flex: 0 0 auto; position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 14px 0 12px; }
     .row-divider::after { content: ''; position: absolute; left: 0; top: -1.5px; width: 64px; border-top: 3px solid ${TEXT_DARK}; }
 
-    /* Rows 2–3 grid of carded panels */
-    .board { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+    /* Rows 2–3: grow ~2.1x the hero; a 2×2 grid that fills its area. minmax(0,1fr)
+       lets the rows shrink below their content so tables compress instead of clipping. */
+    .board { flex: 2.1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
 
-    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .panel-body { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .panel-body { flex: 1 1 auto; min-height: 0; }
+    .panel-body > .grid-table { height: 100%; }
 
-    /* KPI cards (Plan) */
+    /* KPI cards (Plan) — fill the hero row height */
     .kpi-row { display: flex; gap: 14px; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 20px 22px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .kpi-label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 31px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 9px; }
-    .kpi-aside { font-size: 14px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 8px; }
-    .kpi-sub { font-size: 13.5px; color: ${TEXT_MUTED}; margin-top: 7px; }
+    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .kpi-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 28px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 8px; }
+    .kpi-aside { font-size: 13.5px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 8px; }
+    .kpi-sub { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 6px; }
 
-    /* Shared table */
-    .grid-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
-    .grid-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 12px 11px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
-    .grid-table td { padding: 13px 11px; font-size: 13px; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
+    /* Shared table — width:100% fills the column; height:100% stretches the rows to fill the panel */
+    .grid-table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
+    .grid-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 10px 11px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
+    .grid-table td { padding: 9px 11px; font-size: 12.5px; vertical-align: middle; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
     .grid-table tbody tr:last-child td { border-bottom: 0; }
     .grid-table tbody tr:nth-child(even) td { background: #fafafa; }
     .grid-table th.l, .grid-table td.l, .grid-table td.lead, .grid-table td.metric { text-align: left; }
     .grid-table th.r, .grid-table td.num, .grid-table td.r { text-align: right; }
     .grid-table td.strong, .grid-table td.num.strong { font-weight: 700; color: ${TEXT_DARK}; }
 
-    /* Funnel table — roomy rows so Row 1 balances the KPI cards beside it */
-    .funnel th, .funnel td { padding: 14px 16px; font-size: 14px; }
+    /* Funnel table */
+    .funnel th, .funnel td { padding: 11px 16px; font-size: 13.5px; }
     .funnel td.lead { font-weight: 700; color: ${TEXT_DARK}; }
     .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: middle; }
 
     /* Metric matrix specifics */
-    .matrix td.metric .m-label { display: block; font-size: 13.5px; font-weight: 700; color: ${TEXT_DARK}; }
+    .matrix td.metric .m-label { display: block; font-size: 13px; font-weight: 700; color: ${TEXT_DARK}; }
     .matrix td.metric .m-sub { display: block; font-size: 11px; color: ${TEXT_MUTED}; margin-top: 1px; }
     .matrix td.c-mtd, .matrix th.c-mtd { font-weight: 700; color: ${TEXT_DARK}; }
     .matrix .c-sep { border-left: 1px solid ${BORDER}; }
@@ -324,75 +323,61 @@ export function buildStudioHealthBoardHtml({
 
     .empty { text-align: center; color: ${TEXT_MUTED}; padding: 14px; }
 
-    /* Footer */
-    .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
-    .foot-note { font-size: 13px; color: ${TEXT_MUTED}; }
-    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 26px; border-radius: 8px; letter-spacing: 0.02em; }
+    /* Footer — centered View Dashboard button only */
+    .foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; margin-top: 14px; }
+    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 30px; border-radius: 8px; letter-spacing: 0.02em; }
 
-    /* ── Narrow / portrait fallback (phones): drop the fit canvas, scroll normally ── */
+    /* ── Narrow / portrait fallback (phones): single column, scroll normally ── */
     @media (max-width: 820px) {
       body { overflow: auto; }
-      .stage { position: static; overflow: visible; }
-      .wrap { position: static; transform: none !important; top: auto; left: auto; width: 100%; max-width: 760px; margin: 0 auto; }
-      .hero, .board { grid-template-columns: 1fr; }
+      .wrap { height: auto; }
+      .hero, .board { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .hero-body > .grid-table, .hero-body > .kpi-row, .panel-body > .grid-table { height: auto; }
       .kpi-row { flex-wrap: wrap; }
+    }
+    /* ── Short-but-wide screens (e.g. 1366×768 laptops): keep 2 columns but let the
+       page scroll at natural height instead of clipping. TVs/monitors (≥ ~850px tall)
+       keep the single-screen fill. ── */
+    @media (min-width: 821px) and (max-height: 850px) {
+      body { overflow: auto; }
+      .wrap { height: auto; min-height: 100vh; }
+      .board { grid-template-rows: auto auto; }
+      .hero-body > .grid-table, .hero-body > .kpi-row, .panel-body > .grid-table { height: auto; }
     }
   </style>
 </head>
 <body>
-  <div class="stage">
-    <div id="fitwrap" class="wrap">
+  <div class="wrap">
 
-      <div class="topline">
-        <div>
-          <h1>Studio Health Report</h1>
-          <div class="date">${dateLabel}</div>
-        </div>
-        <div class="head-right">
-          <button id="refresh" class="refresh-btn" type="button" data-label="Refresh" title="Re-fetch live numbers from the source sheet">
-            <span class="rf-icon">&#8635;</span><span class="rf-text">Refresh</span>
-          </button>
-          <span id="stamp" class="stamp">Updated ${stamp} IST</span>
-        </div>
+    <div class="topline">
+      <div>
+        <h1>Studio Health Report</h1>
+        <div class="date">${dateLabel}</div>
       </div>
-
-      <!-- Row 1 (hero) -->
-      <div id="hero" class="hero">${heroHtml}</div>
-
-      <hr class="row-divider" />
-
-      <!-- Rows 2–3 (panels) -->
-      <div id="board" class="board">${boardHtml}</div>
-
-      <div class="foot">
-        <span class="foot-note">Live from the source sheet (Rooftop · Studio Health · Adoption tabs) · auto-refreshes hourly</span>
-        ${dashboardUrl ? `<a class="cta" href="${dashboardUrl}" target="_blank" rel="noopener noreferrer">View Dashboard</a>` : ''}
+      <div class="head-right">
+        <button id="refresh" class="refresh-btn" type="button" data-label="Refresh" title="Re-fetch live numbers from the source sheet">
+          <span class="rf-icon">&#8635;</span><span class="rf-text">Refresh</span>
+        </button>
+        <span id="stamp" class="stamp">Updated ${stamp} IST</span>
       </div>
-
     </div>
+
+    <!-- Row 1 (hero) -->
+    <div id="hero" class="hero">${heroHtml}</div>
+
+    <hr class="row-divider" />
+
+    <!-- Rows 2–3 (panels) -->
+    <div id="board" class="board">${boardHtml}</div>
+
+    <div class="foot">
+      ${dashboardUrl ? `<a class="cta" href="${dashboardUrl}" target="_blank" rel="noopener noreferrer">View Dashboard</a>` : ''}
+    </div>
+
   </div>
 
   <script>
-    // ── Scale-to-fit: size the fixed canvas to fill the viewport, no scroll ──
-    (function () {
-      var TARGET = document.getElementById('fitwrap');
-      function fit() {
-        if (!TARGET) return;
-        // Narrow/portrait → CSS fallback handles it; clear any inline transform.
-        if (window.matchMedia('(max-width: 820px)').matches) { TARGET.style.transform = ''; return; }
-        var w = TARGET.offsetWidth, h = TARGET.offsetHeight;   // layout size (ignores transform)
-        if (!w || !h) return;
-        var s = Math.min(window.innerWidth / w, window.innerHeight / h);
-        TARGET.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
-      }
-      window.__fitBoard = fit;
-      window.addEventListener('resize', fit);
-      window.addEventListener('load', fit);
-      if (document.readyState !== 'loading') fit();
-      else document.addEventListener('DOMContentLoaded', fit);
-    })();
-
-    // ── Refresh: live re-fetch (no cache), swap the dynamic regions, refit ──
+    // ── Refresh: live re-fetch (no cache), swap the dynamic regions in place ──
     (function () {
       var btn = document.getElementById('refresh');
       if (!btn) return;
@@ -419,7 +404,6 @@ export function buildStudioHealthBoardHtml({
             btn.disabled = false;
             btn.classList.remove('spin');
             if (txt) txt.textContent = btn.getAttribute('data-label') || 'Refresh';
-            if (window.__fitBoard) window.__fitBoard();
           });
       });
     })();
