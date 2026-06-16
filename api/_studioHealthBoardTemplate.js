@@ -213,9 +213,14 @@ export function buildStudioHealthBoardHtml({
   //   Plan     | Images
   //   Funnel   | 360
   //   Adoption | Video
-  const planBody = `<div class="kpi-row">${planKpis(planCounts)}</div>`
+  // Plan: bare heading (no card) + 3 separate KPI boxes.
+  const planCell = `
+    <div class="plan-cell">
+      ${sectionHead('Plan', `${fmtInt(planCounts.total)} Live rooftops`, SEC.plan)}
+      <div class="kpi-row">${planKpis(planCounts)}</div>
+    </div>`
   const boardHtml = `
-    ${panel('Plan', `${fmtInt(planCounts.total)} Live rooftops`, SEC.plan, planBody)}
+    ${planCell}
     ${metricPanel('Images', 'Delivery health across segments & trend', SEC.images, images)}
     ${panel('Funnel — Contracted → Live', '', SEC.funnel, funnelTable(funnel))}
     ${metricPanel('360', 'Delivery health across segments & trend', SEC.three60, three60)}
@@ -274,12 +279,14 @@ export function buildStudioHealthBoardHtml({
     .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
     .panel-body { flex: 1 1 auto; min-height: 0; }
     .panel-body > .grid-table { height: 100%; }
-    .panel-body > .kpi-row { height: 100%; }
 
-    /* KPI stats (Plan panel) — borderless columns separated by dividers, filling the panel */
-    .kpi-row { display: flex; gap: 0; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; padding: 6px 22px; display: flex; flex-direction: column; justify-content: center; }
-    .kpi + .kpi { border-left: 1px solid ${BORDER}; }
+    /* Plan cell: bare (no card) heading + a row of 3 separate KPI boxes filling the cell */
+    .plan-cell { display: flex; flex-direction: column; min-height: 0; }
+    .plan-cell .kpi-row { flex: 1 1 auto; min-height: 0; }
+
+    /* KPI boxes (Plan) — 3 separate cards */
+    .kpi-row { display: flex; gap: 6px; width: 100%; align-items: stretch; }
+    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
     .kpi-label { font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
     .kpi-value { font-size: 60px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.0; margin-top: 10px; white-space: nowrap; }
     .kpi-aside { font-size: 16px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 9px; }
@@ -322,7 +329,8 @@ export function buildStudioHealthBoardHtml({
       body { overflow: auto; }
       .wrap { height: auto; }
       .board { grid-template-columns: 1fr; grid-template-rows: auto; }
-      .panel-body > .grid-table, .panel-body > .kpi-row { height: auto; }
+      .panel-body > .grid-table { height: auto; }
+      .plan-cell .kpi-row { flex: 0 0 auto; }
       .kpi-row { flex-wrap: wrap; }
     }
     /* ── Short-but-wide screens (e.g. 1366×768 laptops): keep 2 columns but let the
@@ -332,7 +340,8 @@ export function buildStudioHealthBoardHtml({
       body { overflow: auto; }
       .wrap { height: auto; min-height: 100vh; }
       .board { grid-template-rows: auto auto auto; }
-      .panel-body > .grid-table, .panel-body > .kpi-row { height: auto; }
+      .panel-body > .grid-table { height: auto; }
+      .plan-cell .kpi-row { flex: 0 0 auto; }
     }
 
     /* ── Embedded in an iframe (e.g. the vin-tracker "Studio Health" tab): render on a
@@ -342,7 +351,7 @@ export function buildStudioHealthBoardHtml({
     html.embedded, html.embedded body { width: 100%; height: 100%; overflow: hidden; background: ${PAGE_BG}; }
     html.embedded .wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 960px; transform-origin: top left; }
     html.embedded .board { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); }
-    html.embedded .panel-body > .grid-table, html.embedded .panel-body > .kpi-row { height: 100%; }
+    html.embedded .panel-body > .grid-table { height: 100%; }
     html.embedded .kpi-row { flex-wrap: nowrap; }
   </style>
 </head>
