@@ -27,7 +27,10 @@ export async function buildStudioHealthPayload({ rooftopRows, healthMap, adoptio
   const videoG = pickGroup(healthMap, 'video')
 
   const images = [
-    { label: 'Delivered (&lt;6 hrs) %', cols: pickMetric(imagesG, '6hr') },
+    // Two Images rows now contain "6hr": the "(%)" row and a new "# Delivered <6hrs"
+    // count (reserved for later). Require "%" so we always pick the percentage, never
+    // the count — independent of their row order.
+    { label: 'Delivered (&lt;6 hrs) %', cols: pickMetric(imagesG, (m) => m.toLowerCase().includes('6hr') && m.includes('%')) },
     { label: 'Pendency', cols: pickMetric(imagesG, 'pendency') },
     { label: 'P95 Delivery Time (hrs)', cols: pickMetric(imagesG, 'p95') },
     // "Avg Media score" sits under a blank/global product line, so search the whole tab.
