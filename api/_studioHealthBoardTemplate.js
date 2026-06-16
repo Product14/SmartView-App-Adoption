@@ -233,6 +233,8 @@ export function buildStudioHealthBoardHtml({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Studio Health Report — ${dateLabel}</title>
+  <!-- Detect iframe embedding ASAP (before paint) so the embedded styles apply with no flash. -->
+  <script>try{if(window.self!==window.top)document.documentElement.classList.add('embedded')}catch(e){document.documentElement.classList.add('embedded')}</script>
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
@@ -347,6 +349,17 @@ export function buildStudioHealthBoardHtml({
       .board { grid-template-rows: auto auto; }
       .hero-body > .grid-table, .hero-body > .kpi-row, .panel-body > .grid-table { height: auto; }
     }
+
+    /* ── Embedded in an iframe (e.g. the vin-tracker "Studio Health" tab): render on a
+       fixed 16:9-ish canvas and scale it to fit the iframe so the FULL board always
+       shows — no clipping, no scroll — whatever the host screen size. The html.embedded
+       rules outrank the responsive fallbacks above (higher specificity). ── */
+    html.embedded, html.embedded body { width: 100%; height: 100%; overflow: hidden; background: ${PAGE_BG}; }
+    html.embedded .wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 960px; transform-origin: top left; }
+    html.embedded .hero { grid-template-columns: 1fr 1fr; }
+    html.embedded .board { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+    html.embedded .hero-body > .grid-table, html.embedded .hero-body > .kpi-row, html.embedded .panel-body > .grid-table { height: 100%; }
+    html.embedded .kpi-row { flex-wrap: nowrap; }
   </style>
 </head>
 <body>
@@ -380,6 +393,24 @@ export function buildStudioHealthBoardHtml({
   </div>
 
   <script>
+    // ── Embedded (iframe): scale the fixed 1920×960 canvas to fit the iframe, centered ──
+    (function () {
+      if (!document.documentElement.classList.contains('embedded')) return;
+      function fit() {
+        var w = document.querySelector('.wrap');
+        if (!w) return;
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 960);
+        var x = Math.max(0, (window.innerWidth - 1920 * s) / 2);
+        var y = Math.max(0, (window.innerHeight - 960 * s) / 2);
+        w.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+      }
+      window.__fitEmbed = fit;
+      window.addEventListener('resize', fit);
+      window.addEventListener('load', fit);
+      if (document.readyState !== 'loading') fit();
+      else document.addEventListener('DOMContentLoaded', fit);
+    })();
+
     // ── Refresh: live re-fetch (no cache), swap the dynamic regions in place ──
     (function () {
       var btn = document.getElementById('refresh');
