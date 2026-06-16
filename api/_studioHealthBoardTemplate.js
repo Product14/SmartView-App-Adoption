@@ -308,10 +308,15 @@ export function buildStudioHealthBoardHtml({
     .funnel th.r, .funnel td.num { text-align: center; }
     .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: middle; }
 
-    /* Metric matrix specifics — numeric columns centered (header + cells); label stays left */
+    /* Metric matrix specifics — numeric columns centered. The Metric (first) column is a
+       fixed width with large label text sized so the longest label ("P95 Delivery Time
+       (hrs)") fills the cell; every label shares that size for consistency. Height is
+       unaffected (rows stretch to fill the panel), so this never adds vertical scroll. */
+    .matrix { table-layout: fixed; }
+    .matrix th.l, .matrix td.metric { width: 34%; }
     .matrix th.r, .matrix td.r { text-align: center; }
-    .matrix td.metric .m-label { display: block; font-size: 17.5px; font-weight: 700; color: ${TEXT_DARK}; }
-    .matrix td.metric .m-sub { display: block; font-size: 13px; color: ${TEXT_MUTED}; margin-top: 1px; }
+    .matrix td.metric .m-label { display: block; font-size: 24px; font-weight: 700; color: ${TEXT_DARK}; line-height: 1.15; }
+    .matrix td.metric .m-sub { display: block; font-size: 14px; color: ${TEXT_MUTED}; margin-top: 1px; }
     .matrix td.c-mtd, .matrix th.c-mtd { font-weight: 700; color: ${TEXT_DARK}; }
     .matrix .c-sep { border-left: 1px solid ${BORDER}; }
     .matrix .c-lav { background: ${LAVENDER}; }
