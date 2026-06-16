@@ -246,12 +246,12 @@ export function buildStudioHealthBoardHtml({
     /* Fluid full-viewport canvas: fills the whole screen WIDTH (thin side margin)
        and HEIGHT (no scroll). Pure CSS flexbox — no JS transform — so it is robust
        on TV / set-top browsers. Sections flex to fill; tables stretch to fill. */
-    .wrap { height: 100vh; width: 100%; padding: 16px 18px; display: flex; flex-direction: column; }
+    .wrap { height: 100vh; width: 100%; padding: 10px 14px; display: flex; flex-direction: column; }
 
     /* Header */
     .topline { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-    h1 { font-size: 30px; font-weight: 800; line-height: 1.1; margin: 0; }
-    .date { font-size: 14px; color: ${TEXT_MUTED}; margin-top: 4px; }
+    h1 { font-size: 25px; font-weight: 800; line-height: 1.1; margin: 0; }
+    .date { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 3px; }
     .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
     .refresh-btn { display: inline-flex; align-items: center; gap: 7px; background: ${CARD_BG}; color: ${TEXT_DARK}; border: 1px solid ${BORDER}; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17,24,39,0.05); transition: background .15s, border-color .15s; }
     .refresh-btn:hover { background: #fafafa; border-color: #d1d5db; }
@@ -262,55 +262,56 @@ export function buildStudioHealthBoardHtml({
     .stamp { font-size: 11.5px; color: ${TEXT_MUTED}; }
 
     /* Section heading (shared by hero + panels) */
-    .sec-head { flex: 0 0 auto; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 34px; border-radius: 2px; }
-    .sec-title { font-size: 17px; font-weight: 800; line-height: 1.2; }
-    .sec-sub { font-size: 12.5px; color: ${TEXT_MUTED}; margin-top: 2px; }
-    .sec-head-lg .sec-bar { min-height: 40px; flex-basis: 5px; }
-    .sec-head-lg .sec-title { font-size: 20px; }
-    .sec-head-lg .sec-sub { font-size: 13.5px; font-weight: 600; color: ${TEXT_BODY}; }
+    .sec-head { flex: 0 0 auto; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 6px; }
+    .sec-bar { flex: 0 0 4px; align-self: stretch; min-height: 26px; border-radius: 2px; }
+    .sec-title { font-size: 15px; font-weight: 800; line-height: 1.2; }
+    .sec-sub { font-size: 11.5px; color: ${TEXT_MUTED}; margin-top: 1px; }
+    .sec-head-lg .sec-bar { min-height: 32px; flex-basis: 5px; }
+    .sec-head-lg .sec-title { font-size: 17px; }
+    .sec-head-lg .sec-sub { font-size: 12px; font-weight: 600; color: ${TEXT_BODY}; }
 
     /* Row 1 — HERO: grows to fill; columns share the board's 1fr/1fr + gap so the
        vertical split lines up exactly with the panels below. */
-    .hero { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .hero { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
     .hero-col { display: flex; flex-direction: column; min-height: 0; }
     .hero-body { flex: 1 1 auto; min-height: 0; }
     .hero-body > .grid-table { height: 100%; }
     .hero-body > .kpi-row { height: 100%; }
 
     /* The divider that strongly separates Row 1 from rows 2–3 */
-    .row-divider { flex: 0 0 auto; position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 14px 0 12px; }
+    .row-divider { flex: 0 0 auto; position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 8px 0 7px; }
     .row-divider::after { content: ''; position: absolute; left: 0; top: -1.5px; width: 64px; border-top: 3px solid ${TEXT_DARK}; }
 
     /* Rows 2–3: grow ~2.1x the hero; a 2×2 grid that fills its area. minmax(0,1fr)
        lets the rows shrink below their content so tables compress instead of clipping. */
-    .board { flex: 2.1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+    .board { flex: 2.1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 
-    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
     .panel-body { flex: 1 1 auto; min-height: 0; }
     .panel-body > .grid-table { height: 100%; }
 
     /* KPI cards (Plan) — fill the hero row height */
-    .kpi-row { display: flex; gap: 14px; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .kpi-label { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 54px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.02; margin-top: 14px; }
-    .kpi-aside { font-size: 20px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 11px; }
-    .kpi-sub { font-size: 17px; color: ${TEXT_MUTED}; margin-top: 12px; }
+    .kpi-row { display: flex; gap: 10px; width: 100%; align-items: stretch; }
+    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .kpi-label { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 46px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.0; margin-top: 8px; }
+    .kpi-aside { font-size: 17px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 10px; }
+    .kpi-sub { font-size: 14px; color: ${TEXT_MUTED}; margin-top: 7px; }
 
     /* Shared table — width:100% fills the column; height:100% stretches the rows to fill the panel */
     .grid-table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
-    .grid-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 10px 11px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
-    .grid-table td { padding: 9px 11px; font-size: 12.5px; vertical-align: middle; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
+    .grid-table th { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 6px 9px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
+    .grid-table td { padding: 5px 9px; font-size: 11.5px; vertical-align: middle; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
     .grid-table tbody tr:last-child td { border-bottom: 0; }
     .grid-table tbody tr:nth-child(even) td { background: #fafafa; }
     .grid-table th.l, .grid-table td.l, .grid-table td.lead, .grid-table td.metric { text-align: left; }
     .grid-table th.r, .grid-table td.num, .grid-table td.r { text-align: right; }
     .grid-table td.strong, .grid-table td.num.strong { font-weight: 700; color: ${TEXT_DARK}; }
 
-    /* Funnel table */
-    .funnel th, .funnel td { padding: 11px 16px; font-size: 13.5px; }
+    /* Funnel table — numeric columns center-aligned (header + cells); Stage stays left */
+    .funnel th, .funnel td { padding: 7px 14px; font-size: 12.5px; }
     .funnel td.lead { font-weight: 700; color: ${TEXT_DARK}; }
+    .funnel th.r, .funnel td.num { text-align: center; }
     .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: middle; }
 
     /* Metric matrix specifics */
@@ -323,9 +324,10 @@ export function buildStudioHealthBoardHtml({
 
     .empty { text-align: center; color: ${TEXT_MUTED}; padding: 14px; }
 
-    /* Footer — centered View Dashboard button only */
-    .foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; margin-top: 14px; }
-    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 30px; border-radius: 8px; letter-spacing: 0.02em; }
+    /* Footer — small, centered View Dashboard button pinned to the bottom so the
+       data fills the rest of the page above it */
+    .foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; margin-top: 8px; }
+    .cta { display: inline-block; background: ${PILL_BG}; color: #fff; font-size: 11.5px; font-weight: 600; text-decoration: none; padding: 5px 20px; border-radius: 7px; letter-spacing: 0.02em; }
 
     /* ── Narrow / portrait fallback (phones): single column, scroll normally ── */
     @media (max-width: 820px) {
