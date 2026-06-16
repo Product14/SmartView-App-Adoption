@@ -293,10 +293,10 @@ export function buildStudioHealthBoardHtml({
     /* KPI cards (Plan) — fill the hero row height */
     .kpi-row { display: flex; gap: 14px; width: 100%; align-items: stretch; }
     .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .kpi-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 28px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.1; margin-top: 8px; }
-    .kpi-aside { font-size: 13.5px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 8px; }
-    .kpi-sub { font-size: 13px; color: ${TEXT_MUTED}; margin-top: 6px; }
+    .kpi-label { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 54px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.02; margin-top: 14px; }
+    .kpi-aside { font-size: 20px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 11px; }
+    .kpi-sub { font-size: 17px; color: ${TEXT_MUTED}; margin-top: 12px; }
 
     /* Shared table — width:100% fills the column; height:100% stretches the rows to fill the panel */
     .grid-table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
