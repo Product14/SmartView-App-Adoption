@@ -209,23 +209,18 @@ export function buildStudioHealthBoardHtml({
 
   const dashboardUrl = (process.env.STUDIO_HEALTH_DASHBOARD_URL || 'https://analytics.spyne.ai/satudio').replace(/\/$/, '')
 
-  // Row 1 — hero: bare heading + table | bare heading + 3 KPI cards (no panel cards).
-  const heroHtml = `
-    <div class="hero-col">
-      ${sectionHead('Funnel — Contracted → Live', '', SEC.funnel, true)}
-      <div class="hero-body">${funnelTable(funnel)}</div>
-    </div>
-    <div class="hero-col">
-      ${sectionHead('Plan', `${fmtInt(planCounts.total)} Live rooftops`, SEC.plan, true)}
-      <div class="hero-body"><div class="kpi-row">${planKpis(planCounts)}</div></div>
-    </div>`
-
-  // Rows 2–3 — carded panels (Col 1: Images, Video · Col 2: 360, Adoption).
+  // Unified 2×3 grid of panels, row-major order:
+  //   Plan     | Images
+  //   Funnel   | 360
+  //   Adoption | Video
+  const planBody = `<div class="kpi-row">${planKpis(planCounts)}</div>`
   const boardHtml = `
+    ${panel('Plan', `${fmtInt(planCounts.total)} Live rooftops`, SEC.plan, planBody)}
     ${metricPanel('Images', 'Delivery health across segments & trend', SEC.images, images)}
+    ${panel('Funnel — Contracted → Live', '', SEC.funnel, funnelTable(funnel))}
     ${metricPanel('360', 'Delivery health across segments & trend', SEC.three60, three60)}
-    ${metricPanel('Video', 'Delivery health across segments & trend', SEC.video, video)}
-    ${metricPanel('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption)}`
+    ${metricPanel('Adoption', 'Adoption % across segments & trend', SEC.adoption, adoption)}
+    ${metricPanel('Video', 'Delivery health across segments & trend', SEC.video, video)}`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -272,29 +267,19 @@ export function buildStudioHealthBoardHtml({
     .sec-head-lg .sec-title { font-size: 17px; }
     .sec-head-lg .sec-sub { font-size: 12px; font-weight: 600; color: ${TEXT_BODY}; }
 
-    /* Row 1 — HERO: grows to fill; columns share the board's 1fr/1fr + gap so the
-       vertical split lines up exactly with the panels below. */
-    .hero { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 3px; }
-    .hero-col { display: flex; flex-direction: column; min-height: 0; }
-    .hero-body { flex: 1 1 auto; min-height: 0; }
-    .hero-body > .grid-table { height: 100%; }
-    .hero-body > .kpi-row { height: 100%; }
-
-    /* The divider that strongly separates Row 1 from rows 2–3 */
-    .row-divider { flex: 0 0 auto; position: relative; height: 0; border: 0; border-top: 1.5px solid #d6d6dd; margin: 2px 0 2px; }
-    .row-divider::after { content: ''; position: absolute; left: 0; top: -1.5px; width: 64px; border-top: 3px solid ${TEXT_DARK}; }
-
-    /* Rows 2–3: grow ~2.1x the hero; a 2×2 grid that fills its area. minmax(0,1fr)
-       lets the rows shrink below their content so tables compress instead of clipping. */
-    .board { flex: 2.1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 6px; }
+    /* Unified 2×3 grid of carded panels (Plan|Images · Funnel|360 · Adoption|Video).
+       minmax(0,1fr) lets rows shrink below content so tables compress instead of clipping. */
+    .board { flex: 1 1 auto; min-height: 0; margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 6px; }
 
     .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
     .panel-body { flex: 1 1 auto; min-height: 0; }
     .panel-body > .grid-table { height: 100%; }
+    .panel-body > .kpi-row { height: 100%; }
 
-    /* KPI cards (Plan) — fill the hero row height */
-    .kpi-row { display: flex; gap: 10px; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 16px 22px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    /* KPI stats (Plan panel) — borderless columns separated by dividers, filling the panel */
+    .kpi-row { display: flex; gap: 0; width: 100%; align-items: stretch; }
+    .kpi { flex: 1 1 0; padding: 6px 22px; display: flex; flex-direction: column; justify-content: center; }
+    .kpi + .kpi { border-left: 1px solid ${BORDER}; }
     .kpi-label { font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
     .kpi-value { font-size: 60px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.0; margin-top: 10px; white-space: nowrap; }
     .kpi-aside { font-size: 16px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 9px; }
@@ -336,8 +321,8 @@ export function buildStudioHealthBoardHtml({
     @media (max-width: 820px) {
       body { overflow: auto; }
       .wrap { height: auto; }
-      .hero, .board { grid-template-columns: 1fr; grid-template-rows: auto; }
-      .hero-body > .grid-table, .hero-body > .kpi-row, .panel-body > .grid-table { height: auto; }
+      .board { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .panel-body > .grid-table, .panel-body > .kpi-row { height: auto; }
       .kpi-row { flex-wrap: wrap; }
     }
     /* ── Short-but-wide screens (e.g. 1366×768 laptops): keep 2 columns but let the
@@ -346,8 +331,8 @@ export function buildStudioHealthBoardHtml({
     @media (min-width: 821px) and (max-height: 850px) {
       body { overflow: auto; }
       .wrap { height: auto; min-height: 100vh; }
-      .board { grid-template-rows: auto auto; }
-      .hero-body > .grid-table, .hero-body > .kpi-row, .panel-body > .grid-table { height: auto; }
+      .board { grid-template-rows: auto auto auto; }
+      .panel-body > .grid-table, .panel-body > .kpi-row { height: auto; }
     }
 
     /* ── Embedded in an iframe (e.g. the vin-tracker "Studio Health" tab): render on a
@@ -356,9 +341,8 @@ export function buildStudioHealthBoardHtml({
        rules outrank the responsive fallbacks above (higher specificity). ── */
     html.embedded, html.embedded body { width: 100%; height: 100%; overflow: hidden; background: ${PAGE_BG}; }
     html.embedded .wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 960px; transform-origin: top left; }
-    html.embedded .hero { grid-template-columns: 1fr 1fr; }
-    html.embedded .board { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
-    html.embedded .hero-body > .grid-table, html.embedded .hero-body > .kpi-row, html.embedded .panel-body > .grid-table { height: 100%; }
+    html.embedded .board { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); }
+    html.embedded .panel-body > .grid-table, html.embedded .panel-body > .kpi-row { height: 100%; }
     html.embedded .kpi-row { flex-wrap: nowrap; }
   </style>
 </head>
@@ -378,12 +362,7 @@ export function buildStudioHealthBoardHtml({
       </div>
     </div>
 
-    <!-- Row 1 (hero) -->
-    <div id="hero" class="hero">${heroHtml}</div>
-
-    <hr class="row-divider" />
-
-    <!-- Rows 2–3 (panels) -->
+    <!-- 2×3 grid: Plan|Images · Funnel|360 · Adoption|Video -->
     <div id="board" class="board">${boardHtml}</div>
 
     <div class="foot">
@@ -426,10 +405,8 @@ export function buildStudioHealthBoardHtml({
           .then(function (r) { return r.text(); })
           .then(function (html) {
             var doc = new DOMParser().parseFromString(html, 'text/html');
-            ['hero', 'board'].forEach(function (id) {
-              var src = doc.getElementById(id), dst = document.getElementById(id);
-              if (src && dst) dst.innerHTML = src.innerHTML;
-            });
+            var src = doc.getElementById('board'), dst = document.getElementById('board');
+            if (src && dst) dst.innerHTML = src.innerHTML;
             var s = doc.getElementById('stamp'), sd = document.getElementById('stamp');
             if (s && sd) sd.textContent = s.textContent;
           })
