@@ -272,7 +272,7 @@ export function buildStudioHealthBoardHtml({
 
     /* Row 1 — HERO: grows to fill; columns share the board's 1fr/1fr + gap so the
        vertical split lines up exactly with the panels below. */
-    .hero { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .hero { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 7px; }
     .hero-col { display: flex; flex-direction: column; min-height: 0; }
     .hero-body { flex: 1 1 auto; min-height: 0; }
     .hero-body > .grid-table { height: 100%; }
@@ -284,7 +284,7 @@ export function buildStudioHealthBoardHtml({
 
     /* Rows 2–3: grow ~2.1x the hero; a 2×2 grid that fills its area. minmax(0,1fr)
        lets the rows shrink below their content so tables compress instead of clipping. */
-    .board { flex: 2.1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+    .board { flex: 2.1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
 
     .panel { background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
     .panel-body { flex: 1 1 auto; min-height: 0; }
@@ -292,16 +292,16 @@ export function buildStudioHealthBoardHtml({
 
     /* KPI cards (Plan) — fill the hero row height */
     .kpi-row { display: flex; gap: 10px; width: 100%; align-items: stretch; }
-    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
-    .kpi-label { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 46px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.0; margin-top: 8px; }
-    .kpi-aside { font-size: 17px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 10px; }
-    .kpi-sub { font-size: 14px; color: ${TEXT_MUTED}; margin-top: 7px; }
+    .kpi { flex: 1 1 0; background: ${CARD_BG}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .kpi-label { font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 58px; font-weight: 800; color: ${TEXT_DARK}; line-height: 1.0; margin-top: 10px; }
+    .kpi-aside { font-size: 21px; font-weight: 700; color: ${TEXT_MUTED}; margin-left: 10px; }
+    .kpi-sub { font-size: 16px; color: ${TEXT_MUTED}; margin-top: 10px; }
 
     /* Shared table — width:100% fills the column; height:100% stretches the rows to fill the panel */
     .grid-table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${BORDER}; border-radius: 11px; overflow: hidden; background: ${CARD_BG}; }
-    .grid-table th { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 6px 9px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
-    .grid-table td { padding: 5px 9px; font-size: 11.5px; vertical-align: middle; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
+    .grid-table th { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: ${TEXT_MUTED}; padding: 6px 9px; white-space: nowrap; border-bottom: 1px solid ${BORDER}; background: ${CARD_BG}; }
+    .grid-table td { padding: 6px 9px; font-size: 13px; vertical-align: middle; border-bottom: 1px solid ${ROW_BORDER}; white-space: nowrap; color: ${TEXT_BODY}; }
     .grid-table tbody tr:last-child td { border-bottom: 0; }
     .grid-table tbody tr:nth-child(even) td { background: #fafafa; }
     .grid-table th.l, .grid-table td.l, .grid-table td.lead, .grid-table td.metric { text-align: left; }
@@ -309,14 +309,15 @@ export function buildStudioHealthBoardHtml({
     .grid-table td.strong, .grid-table td.num.strong { font-weight: 700; color: ${TEXT_DARK}; }
 
     /* Funnel table — numeric columns center-aligned (header + cells); Stage stays left */
-    .funnel th, .funnel td { padding: 7px 14px; font-size: 12.5px; }
+    .funnel th, .funnel td { padding: 8px 14px; font-size: 14px; }
     .funnel td.lead { font-weight: 700; color: ${TEXT_DARK}; }
     .funnel th.r, .funnel td.num { text-align: center; }
     .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: middle; }
 
-    /* Metric matrix specifics */
-    .matrix td.metric .m-label { display: block; font-size: 13px; font-weight: 700; color: ${TEXT_DARK}; }
-    .matrix td.metric .m-sub { display: block; font-size: 11px; color: ${TEXT_MUTED}; margin-top: 1px; }
+    /* Metric matrix specifics — numeric columns centered (header + cells); label stays left */
+    .matrix th.r, .matrix td.r { text-align: center; }
+    .matrix td.metric .m-label { display: block; font-size: 15.5px; font-weight: 700; color: ${TEXT_DARK}; }
+    .matrix td.metric .m-sub { display: block; font-size: 12px; color: ${TEXT_MUTED}; margin-top: 1px; }
     .matrix td.c-mtd, .matrix th.c-mtd { font-weight: 700; color: ${TEXT_DARK}; }
     .matrix .c-sep { border-left: 1px solid ${BORDER}; }
     .matrix .c-lav { background: ${LAVENDER}; }
