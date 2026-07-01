@@ -30,8 +30,8 @@ function devApi() {
         }
       }
 
-      // /api/sheet — the dashboard's adoption CSV, now backed by Supabase.
-      server.middlewares.use('/api/sheet', runHandler('./api/sheet.js', 'sheet'))
+      // /api/rooftops — the dashboard's adoption CSV, backed by Supabase.
+      server.middlewares.use('/api/rooftops', runHandler('./api/rooftops.js', 'rooftops'))
 
       // /api/sync-adoption — manual Metabase → Supabase sync (hourly cron in prod).
       server.middlewares.use(

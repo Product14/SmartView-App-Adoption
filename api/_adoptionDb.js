@@ -123,3 +123,14 @@ export async function fetchRooftopRows() {
   `)
   return rows
 }
+
+// The ISO timestamp of the last successful Metabase → Supabase sync (set by
+// runSync in sync-adoption.js), or null if no sync has completed yet. Drives the
+// "synced X ago" label in the dashboard header — the true data freshness.
+export async function getLastSync() {
+  await ensureAdoptionSchema()
+  const { rows } = await query(
+    `SELECT last_sync FROM ${SCHEMA}.sync_state WHERE id = 'global'`,
+  )
+  return rows[0]?.last_sync ?? null
+}

@@ -3,7 +3,7 @@
 const norm = (v) => (v ?? '').toString().trim()
 const isYes = (v) => norm(v).toLowerCase() === 'yes'
 
-// Stages that count as an operational rooftop. The source sheet also carries
+// Stages that count as an operational rooftop. The source also carries
 // "Contracted" (and may carry "Churned" etc.). The dashboard and the daily adoption
 // report operate on the Live/Onboarding subset; the Studio Health Report's funnel
 // section needs the full set (see normalizeRows vs transformRows below).
@@ -47,7 +47,7 @@ export function normalizeRows(rawRows) {
       const liveRaw = norm(r.live_date)
       const parsed = liveRaw ? new Date(liveRaw) : null
       const liveDate = parsed && !isNaN(parsed.getTime()) ? parsed : null
-      // Bucket/display by the UTC calendar date (matches the source & the sheet),
+      // Bucket/display by the UTC calendar date (matches the source),
       // not the viewer's local timezone — otherwise late-UTC timestamps drift months.
       const liveYMD = liveDate
         ? `${liveDate.getUTCFullYear()}-${String(liveDate.getUTCMonth() + 1).padStart(2, '0')}-${String(liveDate.getUTCDate()).padStart(2, '0')}`
@@ -65,7 +65,7 @@ export function normalizeRows(rawRows) {
         subType,
         rooftopType: deriveRooftopType(teamType, subType),
         customerSegment: norm(r.customer_segment) || 'Unspecified',
-        // Raw pricing plan from the sheet (e.g. "Studio - Lite"); bucketed in aggregations.
+        // Raw pricing plan from the source (e.g. "Studio - Lite"); bucketed in aggregations.
         plan: norm(r.plan ?? r.Plan),
         app: isYes(r.app_adoption),
         // Support either the current header (Smartview_vdp_enabled) or a rename.

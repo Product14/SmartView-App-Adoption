@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import { transformRows } from './transform.js'
 
-// Same-origin endpoint: a Vercel serverless function in prod, a vite
-// middleware in dev. Both fetch the Google Sheet CSV server-side.
-const ENDPOINT = '/api/sheet'
+// Same-origin endpoint: a Vercel serverless function in prod, a vite middleware
+// in dev. Both serve the rooftop adoption rows as CSV from Supabase (?sync=1
+// triggers a fresh Metabase pull first).
+const ENDPOINT = '/api/rooftops'
 
-export function useSheetData() {
+export function useRooftopData() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -19,24 +20,23 @@ export function useSheetData() {
     setLoading(true)
     setError(null)
     const url = `${ENDPOINT}?${sync ? 'sync=1&' : ''}t=${Date.now()}`
-    Papa.parse(url, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: (res) => {
-        try {
-          setRows(transformRows(res.data))
-          setLastSynced(new Date())
-        } catch (e) {
-          setError(e.message || 'Failed to parse data')
-        }
+    // Fetch manually (rather than Papa's download mode) so we can read the
+    // X-Last-Sync response header — the true "data synced X ago" time from the
+    // Metabase → Supabase sync, not just when this browser fetched.
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const lastSync = res.headers.get('X-Last-Sync')
+        const text = await res.text()
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
+        setRows(transformRows(parsed.data))
+        setLastSynced(lastSync ? new Date(lastSync) : new Date())
         setLoading(false)
-      },
-      error: (err) => {
+      })
+      .catch((err) => {
         setError(err?.message || 'Failed to load data')
         setLoading(false)
-      },
-    })
+      })
   }, [])
 
   useEffect(() => {

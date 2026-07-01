@@ -2,16 +2,16 @@
 
 A self-serve dashboard tracking SmartView (VDP & VLP), Studio App and Smart Campaign adoption across
 rooftops, enterprises and CSMs. Built to be opened by anyone via a URL without re-querying ClickHouse —
-it reads an hourly-refreshed Google Sheet and computes every rollup in the browser.
+it reads an hourly-synced Supabase table and computes every rollup in the browser.
 
 ## How it works
 
-- **Source of truth:** a Google Sheet (rooftop-level, one row per rooftop) that an AppScript
-  trigger refreshes hourly from a Metabase public CSV.
-- **Data access:** the browser fetches `/api/sheet` (same-origin). In production that's a Vercel
-  serverless function ([api/sheet.js](api/sheet.js)) that proxies the sheet's gviz CSV
-  server-side (the gviz endpoint sends no CORS header) and adds an edge cache. In dev, a Vite
-  middleware in [vite.config.js](vite.config.js) mirrors the same endpoint.
+- **Source of truth:** a Supabase Postgres table (`adoption.rooftop_adoption`, one row per rooftop),
+  synced hourly from a Metabase public card by [api/sync-adoption.js](api/sync-adoption.js) (Vercel cron).
+- **Data access:** the browser fetches `/api/rooftops` (same-origin). In production that's a Vercel
+  serverless function ([api/rooftops.js](api/rooftops.js)) that reads the Supabase table and returns it
+  as CSV with an edge cache. Adding `?sync=1` (the Refresh button) runs a fresh Metabase pull first. In
+  dev, a Vite middleware in [vite.config.js](vite.config.js) mirrors the same endpoint.
 - **Aggregation:** 100% client-side ([src/data/aggregations.js](src/data/aggregations.js)) so
   all filters and views stay dynamic.
 
@@ -37,7 +37,7 @@ npm run build    # outputs to dist/
 
 [api/scheduled-report.js](api/scheduled-report.js) is a Vercel serverless function, triggered
 once a day by a Vercel cron (`30 7 * * *` = **1 PM IST**, see [vercel.json](vercel.json)). It
-fetches the same sheet, runs the same transform + aggregations, and emails the Overview content
+reads the same Supabase data, runs the same transform + aggregations, and emails the Overview content
 (the 6 KPI cards + By Customer Segment / By Rooftop Type / By CSM tables — **excluding Newly
 Onboarded Clients**) as an HTML email via the internal email API, reusing VIN Tracker's pattern.
 
@@ -53,8 +53,9 @@ Onboarded Clients**) as an HTML email via the internal email API, reusing VIN Tr
 - Framework preset: Vite (build `npm run build`, output `dist`). Serverless functions in `api/`
   are detected automatically. [vercel.json](vercel.json) adds only the cron + function config
   (no rewrites), so the Vite preset still handles the build and SPA fallback.
-- Optional env var `SHEET_CSV_URL` overrides the default sheet CSV endpoint (set in Vercel
-  Project → Settings → Environment Variables). Defaults are baked in as a fallback.
+- Required env var `ADOPTION_DATABASE_URL` (Supabase transaction-pooler URL, port 6543); optional
+  `ADOPTION_CARD_URL` overrides the Metabase card. Set in Vercel Project → Settings → Environment
+  Variables. The hourly `/api/sync-adoption` cron populates the table.
 - For the daily email to send, set the report env vars listed above.
 
 ## Derived field notes

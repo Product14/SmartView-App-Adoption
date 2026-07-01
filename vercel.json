@@ -8,7 +8,7 @@
     { "source": "/studio-health-report", "destination": "/api/studio-health-board" }
   ],
   "functions": {
-    "api/sheet.js": { "maxDuration": 60 },
+    "api/rooftops.js": { "maxDuration": 60 },
     "api/sync-adoption.js": { "maxDuration": 60 },
     "api/scheduled-report.js": { "maxDuration": 60 },
     "api/studio-health-report.js": { "maxDuration": 60 },

@@ -4,7 +4,7 @@ import Tabs, { TABS } from './components/Tabs'
 import Overview from './tabs/Overview'
 import EnterpriseView from './tabs/EnterpriseView'
 import RooftopView from './tabs/RooftopView'
-import { useSheetData } from './data/useSheetData'
+import { useRooftopData } from './data/useRooftopData'
 
 function initialTab() {
   const t = new URLSearchParams(window.location.search).get('tab')
@@ -12,7 +12,7 @@ function initialTab() {
 }
 
 export default function App() {
-  const { rows, loading, error, lastSynced, refresh } = useSheetData()
+  const { rows, loading, error, lastSynced, refresh } = useRooftopData()
   const [tab, setTab] = useState(initialTab)
 
   // Keep the URL in sync so tab views are shareable (no router / reload needed).
