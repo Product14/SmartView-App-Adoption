@@ -8,7 +8,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import Papa from 'papaparse'
 import { transformRows } from '../src/data/transform.js'
 import { byCSM, byCustomerSegment, computeKpis } from '../src/data/aggregations.js'
 import { buildEmailHtml } from '../api/_emailTemplate.js'
@@ -34,12 +33,11 @@ function loadEnv(file) {
 }
 loadEnv('.env.local')
 
-const SHEET_CSV_URL =
-  process.env.SHEET_CSV_URL ||
-  'https://docs.google.com/spreadsheets/d/1VDvn6ZcHfRYdjtVHi2aJ06tylbKX2TyC9Lvhg-0-078/gviz/tq?tqx=out:csv&gid=0'
-
-const csv = await (await fetch(SHEET_CSV_URL, { redirect: 'follow' })).text()
-const rows = transformRows(Papa.parse(csv, { header: true, skipEmptyLines: true }).data)
+// Read the Rooftop-Level data from Supabase — same source as api/scheduled-report.js.
+// Dynamic import so loadEnv('.env.local') above has populated ADOPTION_DATABASE_URL
+// before _adoptionDb.js builds its pg pool at module-init time.
+const { fetchRooftopRows } = await import('../api/_adoptionDb.js')
+const rows = transformRows(await fetchRooftopRows())
 
 const kpis = computeKpis(rows)
 const totalRow = {
@@ -69,3 +67,6 @@ if (process.argv.includes('send')) {
   writeFileSync(out, html)
   console.log(`✓ Wrote report-preview.html — ${rows.length} rooftops, ${totalRow.enterprises} enterprises`)
 }
+
+// The pg pool keeps the event loop alive; exit explicitly once the report is done.
+process.exit(0)

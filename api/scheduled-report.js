@@ -2,21 +2,18 @@
 // adoption report email. Triggered once a day by the Vercel cron defined in
 // vercel.json (08:00 UTC = 1:30 PM IST).
 //
-// It fetches the same Google Sheet CSV the dashboard uses, runs the same
-// transform + aggregation logic, renders the Overview content (minus "Newly
-// Onboarded Clients") as an HTML email, and sends it via the internal email API.
+// It reads the same Rooftop-Level adoption data the dashboard uses (now from
+// Supabase, populated hourly by /api/sync-adoption), runs the same transform +
+// aggregation logic, renders the Overview content (minus "Newly Onboarded
+// Clients") as an HTML email, and sends it via the internal email API.
 //
 // Add ?preview=1 to return the rendered HTML instead of sending — handy for QA.
 
-import Papa from 'papaparse'
 import { transformRows } from '../src/data/transform.js'
 import { byCSM, byCustomerSegment, computeKpis } from '../src/data/aggregations.js'
 import { buildEmailHtml } from './_emailTemplate.js'
 import { sendReport } from './_emailClient.js'
-
-const SHEET_CSV_URL =
-  process.env.SHEET_CSV_URL ||
-  'https://docs.google.com/spreadsheets/d/1VDvn6ZcHfRYdjtVHi2aJ06tylbKX2TyC9Lvhg-0-078/gviz/tq?tqx=out:csv&gid=0'
+import { fetchRooftopRows } from './_adoptionDb.js'
 
 export default async function handler(req, res) {
   // Cron auth: only enforced when CRON_SECRET is set (so local runs need no
@@ -27,13 +24,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const upstream = await fetch(SHEET_CSV_URL, { redirect: 'follow' })
-    if (!upstream.ok) {
-      return res.status(502).json({ error: `Upstream error ${upstream.status}` })
-    }
-    const csv = await upstream.text()
-    const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true })
-    const rows = transformRows(parsed.data)
+    const rows = transformRows(await fetchRooftopRows())
 
     const kpis = computeKpis(rows)
     const segmentRows = byCustomerSegment(rows)
