@@ -112,7 +112,7 @@ async function fetchCardRows(retries = 2) {
   throw lastErr
 }
 
-async function runSync() {
+export async function runSync() {
   await ensureAdoptionSchema()
 
   // Atomic lock claim. Steal a stale lock (>10 min) so a timed-out run can't wedge sync forever.

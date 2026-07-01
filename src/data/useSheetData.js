@@ -12,10 +12,14 @@ export function useSheetData() {
   const [error, setError] = useState(null)
   const [lastSynced, setLastSynced] = useState(null)
 
-  const load = useCallback(() => {
+  // sync=false → just read the current Supabase snapshot (fast; used on mount).
+  // sync=true  → trigger a fresh Metabase → Supabase pull first, then read
+  //              (the Refresh button; takes a few seconds).
+  const load = useCallback((sync = false) => {
     setLoading(true)
     setError(null)
-    Papa.parse(`${ENDPOINT}?t=${Date.now()}`, {
+    const url = `${ENDPOINT}?${sync ? 'sync=1&' : ''}t=${Date.now()}`
+    Papa.parse(url, {
       download: true,
       header: true,
       skipEmptyLines: true,
@@ -36,8 +40,8 @@ export function useSheetData() {
   }, [])
 
   useEffect(() => {
-    load()
+    load(false)
   }, [load])
 
-  return { rows, loading, error, lastSynced, refresh: load }
+  return { rows, loading, error, lastSynced, refresh: () => load(true) }
 }
