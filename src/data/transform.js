@@ -1,5 +1,10 @@
 // Normalize raw CSV rows (one per rooftop) into typed objects with derived fields.
 
+// Extension is load-bearing: this module is also imported directly by the Node
+// side (api/scheduled-report.js, scripts/report.mjs), where ESM won't resolve
+// an extensionless specifier.
+import { normalizeUrl } from '../utils/links.js'
+
 const norm = (v) => (v ?? '').toString().trim()
 const isYes = (v) => norm(v).toLowerCase() === 'yes'
 
@@ -74,6 +79,11 @@ export function normalizeRows(rawRows) {
         smartCampaign: isYes(r.smart_campaign_adoption),
         // Active = processed an image in the last 30 days.
         active: isYes(r.Active ?? r.active),
+        // Dealer-site links; '' when the source has nothing usable. Only the
+        // Supabase path supplies these — the legacy gviz sheet reads leave them blank.
+        vdpUrl: normalizeUrl(r.vdp_url),
+        vlpUrl: normalizeUrl(r.vlp_url),
+        websiteUrl: normalizeUrl(r.website_url),
         liveDate,
         liveYMD,
         liveMonth: liveYMD ? liveYMD.slice(0, 7) : null,

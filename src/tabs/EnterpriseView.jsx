@@ -3,8 +3,11 @@ import DataTable from '../components/DataTable'
 import FilterBar from '../components/FilterBar'
 import Pill from '../components/Pill'
 import CopyButton from '../components/CopyButton'
+import LinkButton from '../components/LinkButton'
+import ToggleButton from '../components/ToggleButton'
 import { byEnterprise } from '../data/aggregations'
 import { fmtInt, fmtMoney, noUnderscore, pctOf, shortEmail } from '../utils/format'
+import { consoleUrl } from '../utils/links'
 
 const TYPE_COLOR = {
   GROUP_DEALER: 'indigo',
@@ -37,6 +40,8 @@ export default function EnterpriseView({ rows }) {
   const [sv, setSv] = useState('')
   const [svl, setSvl] = useState('')
   const [sc, setSc] = useState('')
+  // Display preference, not a filter — off by default, untouched by "Clear filters".
+  const [showLinks, setShowLinks] = useState(false)
 
   // Enterprise metrics are percentages; "Yes" = any adoption (>0%), "No" = none (0%).
   const yesNo = [
@@ -89,6 +94,11 @@ export default function EnterpriseView({ rows }) {
         <span className="inline-flex items-center gap-1.5">
           <span className="font-semibold text-slate-800">{e.enterpriseName}</span>
           <CopyButton value={e.enterpriseId} title="Copy enterprise ID" />
+          <LinkButton
+            href={consoleUrl(e.teamId, e.enterpriseId)}
+            title="Open in Console (first rooftop)"
+            icon="console"
+          />
         </span>
       ),
       csvValue: (e) => e.enterpriseName,
@@ -103,6 +113,11 @@ export default function EnterpriseView({ rows }) {
     { key: 'svPct', label: 'SmartView VDP', align: 'right', sortValue: (e) => e.svPct, render: (e) => <span className="font-semibold text-emerald-600">{fmtInt(e.sv)} ({pctOf(e.svPct)})</span>, csvValue: (e) => `${fmtInt(e.sv)} (${pctOf(e.svPct)})` },
     { key: 'svlPct', label: 'SmartView VLP', align: 'right', sortValue: (e) => e.svlPct, render: (e) => <span className="font-semibold text-amber-600">{fmtInt(e.svl)} ({pctOf(e.svlPct)})</span>, csvValue: (e) => `${fmtInt(e.svl)} (${pctOf(e.svlPct)})` },
     { key: 'scPct', label: 'Smart Campaign', align: 'right', sortValue: (e) => e.scPct, render: (e) => <span className="font-semibold text-violet-600">{fmtInt(e.sc)} ({pctOf(e.scPct)})</span>, csvValue: (e) => `${fmtInt(e.sc)} (${pctOf(e.scPct)})` },
+    // First non-empty URL across the enterprise's rooftops. Grouped under one
+    // "Website Link" banner and toggled by the FilterBar button; always in the CSV.
+    { key: 'vdpUrl', label: 'VDP', group: 'Website Link', align: 'center', sortable: false, hidden: !showLinks, render: (e) => <LinkButton href={e.vdpUrl} title="Open VDP" />, csvValue: (e) => e.vdpUrl },
+    { key: 'vlpUrl', label: 'VLP', group: 'Website Link', align: 'center', sortable: false, hidden: !showLinks, render: (e) => <LinkButton href={e.vlpUrl} title="Open VLP" />, csvValue: (e) => e.vlpUrl },
+    { key: 'websiteUrl', label: 'Website', group: 'Website Link', align: 'center', sortable: false, hidden: !showLinks, render: (e) => <LinkButton href={e.websiteUrl} title="Open website" />, csvValue: (e) => e.websiteUrl },
     { key: 'csm', label: 'CSM', sortValue: (e) => e.csm, render: (e) => <span className="text-slate-600">{shortEmail(e.csm)}</span>, csvValue: (e) => e.csm },
     { key: 'obPoc', label: 'OB POC', sortValue: (e) => e.obPoc, render: (e) => <span className="text-slate-600">{shortEmail(e.obPoc)}</span>, csvValue: (e) => e.obPoc },
     { key: 'arr', label: 'Total ARR', align: 'right', sortValue: (e) => e.arr, render: (e) => <span className="font-semibold text-slate-900">{fmtMoney(e.arr)}</span>, csvValue: (e) => Math.round(e.arr) },
@@ -124,6 +139,15 @@ export default function EnterpriseView({ rows }) {
           { label: 'SmartView VLP: All', value: svl, onChange: setSvl, options: yesNo },
           { label: 'Smart Campaign: All', value: sc, onChange: setSc, options: yesNo },
         ]}
+        extra={
+          <ToggleButton
+            active={showLinks}
+            onClick={() => setShowLinks((v) => !v)}
+            title="Show VDP / VLP / website links"
+          >
+            🔗 Website links
+          </ToggleButton>
+        }
         showClear={hasFilters}
         onClear={() => {
           setSearch('')

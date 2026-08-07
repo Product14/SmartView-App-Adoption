@@ -1,6 +1,7 @@
 // Generic filter row: a search box, dropdown selects, and a clear button.
 // selects: [{ label, value, onChange, options: [{ value, label }] }]
-export default function FilterBar({ search, selects = [], onClear, showClear }) {
+// extra:   optional node (e.g. a display toggle) rendered after the selects
+export default function FilterBar({ search, selects = [], onClear, showClear, extra }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {search && (
@@ -27,6 +28,7 @@ export default function FilterBar({ search, selects = [], onClear, showClear }) 
           ))}
         </select>
       ))}
+      {extra}
       {showClear && (
         <button
           onClick={onClear}

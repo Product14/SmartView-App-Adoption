@@ -209,6 +209,11 @@ export function byEnterprise(rows) {
     const obCount = {}
     const typeCount = {}
     const segmentCount = {}
+    // Dealer-site links are per-rooftop but usually identical across an
+    // enterprise; surface the first rooftop that actually has one.
+    let vdpUrl = ''
+    let vlpUrl = ''
+    let websiteUrl = ''
     for (const r of rs) {
       if (r.app) app++
       if (r.smartview) sv++
@@ -225,6 +230,9 @@ export function byEnterprise(rows) {
       typeCount[tt] = (typeCount[tt] || 0) + 1
       const seg = r.customerSegment || 'Unspecified'
       segmentCount[seg] = (segmentCount[seg] || 0) + 1
+      if (!vdpUrl && r.vdpUrl) vdpUrl = r.vdpUrl
+      if (!vlpUrl && r.vlpUrl) vlpUrl = r.vlpUrl
+      if (!websiteUrl && r.websiteUrl) websiteUrl = r.websiteUrl
     }
     const csm = Object.entries(csmCount).sort((a, b) => b[1] - a[1])[0][0]
     // OB POC is per-rooftop; surface the most common one for the enterprise.
@@ -236,6 +244,8 @@ export function byEnterprise(rows) {
     return {
       enterpriseId: id,
       enterpriseName: rs[0].enterpriseName,
+      // Any rooftop id works for the Console deep-link; take the first.
+      teamId: rs[0].teamId,
       teamType,
       customerSegment,
       rooftops: rs.length,
@@ -254,6 +264,9 @@ export function byEnterprise(rows) {
       csm,
       obPoc,
       arr,
+      vdpUrl,
+      vlpUrl,
+      websiteUrl,
     }
   })
 }

@@ -63,8 +63,17 @@ export function ensureAdoptionSchema() {
           smart_campaign_adoption TEXT,
           active                  TEXT,
           enterprise_stage        TEXT,
+          vdp_url                 TEXT,
+          vlp_url                 TEXT,
+          website_url             TEXT,
           synced_at               TEXT
         );
+
+        -- CREATE TABLE IF NOT EXISTS is a no-op once the table exists, so columns
+        -- added after the first deploy need an explicit (idempotent) ALTER.
+        ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS vdp_url     TEXT;
+        ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS vlp_url     TEXT;
+        ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS website_url TEXT;
 
         CREATE INDEX IF NOT EXISTS idx_rooftop_adoption_enterprise
           ON ${TABLE}(enterprise_id);
@@ -117,7 +126,10 @@ export async function fetchRooftopRows() {
       smartview_vlp_enabled   AS "Smartview_vlp_enabled",
       smart_campaign_adoption AS "smart_campaign_adoption",
       active                  AS "Active",
-      enterprise_stage        AS "enterprise_stage"
+      enterprise_stage        AS "enterprise_stage",
+      vdp_url                 AS "vdp_url",
+      vlp_url                 AS "vlp_url",
+      website_url             AS "website_url"
     FROM ${TABLE}
     ORDER BY team_id
   `)

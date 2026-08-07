@@ -34,8 +34,24 @@ function CsvButton({ onClick, label }) {
   )
 }
 
+// Collapse the visible columns into header groups: runs of adjacent columns
+// sharing the same `group` become one spanning cell, everything else stands
+// alone. Returns null when no column declares a group, so the common case keeps
+// its single header row untouched.
+function buildGroups(cols) {
+  if (!cols.some((c) => c.group)) return null
+  const groups = []
+  for (const col of cols) {
+    const last = groups[groups.length - 1]
+    if (col.group && last && last.group === col.group) last.cols.push(col)
+    else groups.push({ group: col.group || null, cols: [col] })
+  }
+  return groups
+}
+
 /**
- * columns: [{ key, label, align?, sortable?, render?(row), sortValue?(row), csvValue?(row), totalRender?(total) }]
+ * columns: [{ key, label, align?, sortable?, group?, render?(row), sortValue?(row), csvValue?(row), totalRender?(total) }]
+ * group       — columns sharing this label render under one spanning header (two-row thead)
  * title       — render a card header (indigo accent bar + title) with the CSV button inline
  * headerExtra — extra node shown in the title header (left of the CSV button)
  * showRank    — prepend a "#" rank column
@@ -65,6 +81,7 @@ export default function DataTable({
 
   // Columns flagged `hidden` are excluded from the table but still exported to CSV.
   const visibleColumns = useMemo(() => columns.filter((c) => !c.hidden), [columns])
+  const headerGroups = useMemo(() => buildGroups(visibleColumns), [visibleColumns])
 
   const sorted = useMemo(() => {
     if (!sort) return rows
@@ -100,35 +117,91 @@ export default function DataTable({
   }
 
   const sticky = maxHeight ? 'sticky top-0 z-10' : ''
+  // Sub-header row sits directly below the group row; h-10 on both keeps the
+  // 40px offset exact, so nothing overlaps or gaps while the body scrolls.
+  const stickySub = maxHeight ? 'sticky top-10 z-10' : ''
   const stickyFoot = maxHeight ? 'sticky bottom-0 z-10' : ''
   const colSpan = visibleColumns.length + (showRank ? 1 : 0)
 
+  // A normal sortable column header, shared by the flat and grouped layouts.
+  function headerCell(col, extra = {}) {
+    const active = sort && sort.key === col.key
+    const { stickyClass = sticky, className = '', ...rest } = extra
+    return (
+      <th
+        key={col.key}
+        onClick={() => toggleSort(col)}
+        className={`${stickyClass} h-10 whitespace-nowrap ${headerBg} px-4 py-3 text-xs font-semibold ${headerText} ${
+          alignClass[col.align] || alignClass.left
+        } ${col.sortable === false ? '' : 'cursor-pointer select-none hover:text-slate-900'} ${className}`}
+        {...rest}
+      >
+        <span className={`inline-flex items-center ${col.align === 'right' ? 'justify-end' : ''}`}>
+          {col.label}
+          {col.sortable !== false && <SortIcon state={active ? sort.dir : null} />}
+        </span>
+      </th>
+    )
+  }
+
+  const rankHeader = ({ className = '', ...rest } = {}) => (
+    <th
+      className={`${sticky} h-10 ${headerBg} px-4 py-3 text-left text-xs font-semibold ${headerText} ${className}`}
+      {...rest}
+    >
+      #
+    </th>
+  )
+
+  const thead = headerGroups ? (
+    // Two-row header: grouped columns get a spanning banner, ungrouped ones
+    // stretch across both rows so they still read as single headers.
+    <thead>
+      <tr>
+        {showRank && rankHeader({ rowSpan: 2, className: 'border-b border-slate-200' })}
+        {headerGroups.map((g) =>
+          g.group ? (
+            <th
+              key={`group-${g.group}`}
+              colSpan={g.cols.length}
+              className={`${sticky} h-10 whitespace-nowrap border-x border-slate-300 ${headerBg} px-4 py-3 text-center text-xs font-semibold ${headerText}`}
+            >
+              {g.group}
+            </th>
+          ) : (
+            headerCell(g.cols[0], { rowSpan: 2, className: 'border-b border-slate-200' })
+          ),
+        )}
+      </tr>
+      <tr>
+        {headerGroups.flatMap((g) =>
+          g.group
+            ? g.cols.map((col, i) =>
+                headerCell(col, {
+                  stickyClass: stickySub,
+                  // Bottom border lives on the cells, not the row: the ungrouped
+                  // rowSpan=2 headers above sit outside this <tr>.
+                  className: `border-b border-slate-200 ${i === 0 ? 'border-l border-slate-300' : ''} ${
+                    i === g.cols.length - 1 ? 'border-r border-slate-300' : ''
+                  }`,
+                }),
+              )
+            : [],
+        )}
+      </tr>
+    </thead>
+  ) : (
+    <thead>
+      <tr className="border-b border-slate-200">
+        {showRank && rankHeader()}
+        {visibleColumns.map((col) => headerCell(col))}
+      </tr>
+    </thead>
+  )
+
   const table = (
     <table className="min-w-full text-sm">
-      <thead>
-        <tr className="border-b border-slate-200">
-          {showRank && (
-            <th className={`${sticky} ${headerBg} px-4 py-3 text-left text-xs font-semibold ${headerText}`}>#</th>
-          )}
-          {visibleColumns.map((col) => {
-            const active = sort && sort.key === col.key
-            return (
-              <th
-                key={col.key}
-                onClick={() => toggleSort(col)}
-                className={`${sticky} whitespace-nowrap ${headerBg} px-4 py-3 text-xs font-semibold ${headerText} ${
-                  alignClass[col.align] || alignClass.left
-                } ${col.sortable === false ? '' : 'cursor-pointer select-none hover:text-slate-900'}`}
-              >
-                <span className={`inline-flex items-center ${col.align === 'right' ? 'justify-end' : ''}`}>
-                  {col.label}
-                  {col.sortable !== false && <SortIcon state={active ? sort.dir : null} />}
-                </span>
-              </th>
-            )
-          })}
-        </tr>
-      </thead>
+      {thead}
       <tbody>
         {paged.length === 0 && (
           <tr>

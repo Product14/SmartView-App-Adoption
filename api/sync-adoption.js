@@ -36,6 +36,9 @@ const COLUMNS = [
   'smart_campaign_adoption',
   'active',
   'enterprise_stage',
+  'vdp_url',
+  'vlp_url',
+  'website_url',
   'synced_at',
 ]
 
@@ -72,6 +75,9 @@ const SOURCES = {
   smart_campaign_adoption: (r) => norm(r['smart_campaign_adoption']),
   active: (r) => norm(r['Active'] ?? r['active']),
   enterprise_stage: (r) => norm(r['enterprise_stage']),
+  vdp_url: (r) => norm(r['vdp_url']),
+  vlp_url: (r) => norm(r['vlp_url']),
+  website_url: (r) => norm(r['website_url']),
 }
 
 async function fetchCardRows(retries = 2) {
